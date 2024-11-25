@@ -10,8 +10,8 @@ const Home = () => (
         </Col>
 
         <Col xs={8} className="d-flex flex-column justify-content-center">
-          <h1>Welcome to this template</h1>
-          <p>Now get to work and modify this app!</p>
+          <h1>Welcome to Spots</h1>
+          <p>Find your Perfect Spot!</p>
         </Col>
       </Row>
     </Container>

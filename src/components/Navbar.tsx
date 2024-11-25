@@ -18,66 +18,68 @@ const NavBar: React.FC = () => {
   const userWithRole = session?.user as { email: string; randomKey: string };
   const role = userWithRole?.randomKey;
   const pathName = usePathname();
+
   return (
     <Navbar bg="light" expand="lg">
       <Container>
-        <Navbar.Brand href="/">Next.js Application Template</Navbar.Brand>
+        <Navbar.Brand href="/">SPOTS</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            {currentUser
-              ? [
-                  <Nav.Link
-                    id="add-stuff-nav"
-                    href="/profile"
-                    key="profile"
-                    active={pathName === '/profile'}
-                  >
-                    Profile
-                  </Nav.Link>,
-                  <Nav.Link
-                    id="list-stuff-nav"
-                    href="/list"
-                    key="list"
-                    active={pathName === '/list'}
-                  >
-                    Map
-                  </Nav.Link>,
-                  <Nav.Link
-                    id="list-stuff-nav"
-                    href="/list"
-                    key="list"
-                    active={pathName === '/list'}
-                  >
-                  Favorites
-                  </Nav.Link>,
-                ]
-              : ''}
-            {currentUser && role === 'ADMIN' ? (
+            {/* Always visible links */}
+            <Nav.Link
+              id="map-nav"
+              href="/map"
+              key="map"
+              active={pathName === '/map'}
+            >
+              Map
+            </Nav.Link>
+            <Nav.Link
+              id="favorites-nav"
+              href="/favorites"
+              key="favorites"
+              active={pathName === '/favorites'}
+            >
+              Favorites
+            </Nav.Link>
+
+            {/* Links visible only to logged-in users */}
+            {currentUser && (
               <Nav.Link
-                id="admin-stuff-nav"
+                id="profile-nav"
+                href="/profile"
+                key="profile"
+                active={pathName === '/profile'}
+              >
+                  Profile
+              </Nav.Link>
+            )}
+            {/* Admin-specific link */}
+            {currentUser && role === 'ADMIN' && (
+              <Nav.Link
+                id="admin-nav"
                 href="/admin"
                 key="admin"
                 active={pathName === '/admin'}
               >
                 Admin
               </Nav.Link>
-            ) : (
-              ''
             )}
           </Nav>
           <Nav>
+            {/* Authentication dropdown */}
             {session ? (
-              <NavDropdown id="login-dropdown" title={currentUser}>
+              <NavDropdown id="user-dropdown" title={currentUser}>
                 <NavDropdown.Item
-                  id="login-dropdown-sign-out"
+                  id="user-signout"
                   href="/api/auth/signout"
                 >
                   <BoxArrowRight />
                   Sign Out
                 </NavDropdown.Item>
                 <NavDropdown.Item
-                  id="login-dropdown-change-password"
+                  id="user-change-password"
                   href="/auth/change-password"
                 >
                   <Lock />
@@ -85,16 +87,16 @@ const NavBar: React.FC = () => {
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <NavDropdown id="login-dropdown" title="Login">
+              <NavDropdown id="guest-dropdown" title="Login">
                 <NavDropdown.Item
-                  id="login-dropdown-sign-in"
+                  id="guest-signin"
                   href="/auth/signin"
                 >
                   <PersonFill />
                   Sign in
                 </NavDropdown.Item>
                 <NavDropdown.Item
-                  id="login-dropdown-sign-up"
+                  id="guest-signup"
                   href="/auth/signup"
                 >
                   <PersonPlusFill />
