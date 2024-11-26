@@ -98,7 +98,7 @@ const NavBar: React.FC = () => {
               href="/favorites"
               key="favorites"
             >
-              add spot
+              Favorites
             </Nav.Link>
             <Nav.Link
               id={ComponentIDs.projectsMenuItem}
