@@ -1,7 +1,7 @@
-const UserProfilePage = () => (
+const Profile = () => (
   <div>
     <h1>User Profile Page</h1>
   </div>
 );
 
-export default UserProfilePage;
+export default Profile;

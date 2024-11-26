@@ -1,104 +1,123 @@
-/* eslint-disable react/jsx-indent, @typescript-eslint/indent */
-
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
-import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import {
-  BoxArrowRight,
-  Lock,
-  PersonFill,
-  PersonPlusFill,
-} from 'react-bootstrap-icons';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Container, Image, Nav, Navbar, NavDropdown, Form, Button } from 'react-bootstrap';
+import { BoxArrowRight, PersonFill, PersonPlusFill, Search } from 'react-bootstrap-icons';
+import { ComponentIDs } from '@/utilities/ids';
 
 const NavBar: React.FC = () => {
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
   const currentUser = session?.user?.email;
-  const userWithRole = session?.user as { email: string; randomKey: string };
-  const role = userWithRole?.randomKey;
-  const pathName = usePathname();
+  const menuStyle = { marginBottom: '0px' };
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
 
   return (
-    <Navbar bg="light" expand="lg">
+    <Navbar expand="lg" style={menuStyle}>
       <Container>
-        <Navbar.Brand href="/">SPOTS</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
-            {/* Always visible links */}
-            <Nav.Link
-              id="map-nav"
-              href="/map"
-              key="map"
-              active={pathName === '/map'}
-            >
-              Map
-            </Nav.Link>
-            <Nav.Link
-              id="favorites-nav"
-              href="/favorites"
-              key="favorites"
-              active={pathName === '/favorites'}
-            >
-              Favorites
-            </Nav.Link>
+        <Navbar.Brand href="/" className="align-items-center">
+          <span style={{ fontWeight: 800, fontSize: '24px' }}>
+            <Image src="/images/logo.png" width={50} style={{ marginBottom: 3 }} alt="spots" />
+            spots
+          </span>
+        </Navbar.Brand>
+        <Navbar.Toggle aria-controls={ComponentIDs.basicNavbarNav} />
+        <Navbar.Collapse id={ComponentIDs.basicNavbarNav}>
 
-            {/* Links visible only to logged-in users */}
+          {/* Search Bar */}
+          <Form className="d-flex mx-auto" onSubmit={handleSearch}>
+            <Form.Control
+              type="search"
+              placeholder="Search spots..."
+              className="me-2"
+              aria-label="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '400px',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              }}
+            />
+            <Button
+              className="btn-primary"
+              type="submit"
+            >
+              <Search />
+            </Button>
+          </Form>
+
+          {/* Menu Items */}
+          <Nav className="me-auto justify-content-start">
             {currentUser && (
               <Nav.Link
-                id="profile-nav"
-                href="/profile"
-                key="profile"
-                active={pathName === '/profile'}
+                id={ComponentIDs.homeMenuItem}
+                active={pathname === '/home'}
+                href="/home"
+                key="home"
               >
-                  Profile
+                home
               </Nav.Link>
             )}
-            {/* Admin-specific link */}
-            {currentUser && role === 'ADMIN' && (
-              <Nav.Link
-                id="admin-nav"
-                href="/admin"
-                key="admin"
-                active={pathName === '/admin'}
-              >
-                Admin
-              </Nav.Link>
-            )}
+            <Nav.Link
+              id={ComponentIDs.profilesMenuItem}
+              active={pathname === '/home'}
+              href="/home"
+              key="home"
+            >
+              home
+            </Nav.Link>
+            <Nav.Link
+              id={ComponentIDs.projectsMenuItem}
+              active={pathname === '/map'}
+              href="/map"
+              key="map"
+            >
+              map
+            </Nav.Link>
+            <Nav.Link
+              id={ComponentIDs.projectsMenuItem}
+              active={pathname === '/addspot'}
+              href="/addspot"
+              key="addspot"
+            >
+              add spot
+            </Nav.Link>
+            <Nav.Link
+              id={ComponentIDs.projectsMenuItem}
+              active={pathname === '/profile'}
+              href="/profile"
+              key="profile"
+            >
+              profile
+            </Nav.Link>
           </Nav>
-          <Nav>
-            {/* Authentication dropdown */}
-            {session ? (
-              <NavDropdown id="user-dropdown" title={currentUser}>
-                <NavDropdown.Item
-                  id="user-signout"
-                  href="/api/auth/signout"
-                >
+
+          {/* Dropdowns */}
+          <Nav className="justify-content-end">
+            {currentUser ? (
+              <NavDropdown id={ComponentIDs.currentUserDropdown} title={currentUser}>
+                <NavDropdown.Item id={ComponentIDs.currentUserDropdownSignOut} href="/auth/signout">
                   <BoxArrowRight />
-                  Sign Out
-                </NavDropdown.Item>
-                <NavDropdown.Item
-                  id="user-change-password"
-                  href="/auth/change-password"
-                >
-                  <Lock />
-                  Change Password
+                  Sign out
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <NavDropdown id="guest-dropdown" title="Login">
-                <NavDropdown.Item
-                  id="guest-signin"
-                  href="/auth/signin"
-                >
+              <NavDropdown id={ComponentIDs.loginDropdown} title="Login">
+                <NavDropdown.Item id={ComponentIDs.loginDropdownSignIn} href="/auth/signin">
                   <PersonFill />
                   Sign in
                 </NavDropdown.Item>
-                <NavDropdown.Item
-                  id="guest-signup"
-                  href="/auth/signup"
-                >
+                <NavDropdown.Item id={ComponentIDs.loginDropdownSignUp} href="/auth/signup">
                   <PersonPlusFill />
                   Sign up
                 </NavDropdown.Item>

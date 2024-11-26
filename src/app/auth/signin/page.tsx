@@ -14,7 +14,7 @@ const SignIn = () => {
     const email = target.email.value;
     const password = target.password.value;
     const result = await signIn('credentials', {
-      callbackUrl: '/list',
+      callbackUrl: '/home',
       email,
       password,
     });
@@ -25,35 +25,72 @@ const SignIn = () => {
   };
 
   return (
-    <main>
-      <Container>
-        <Row className="justify-content-center">
-          <Col xs={5}>
-            <h1 className="text-center">Sign In</h1>
-            <Card>
+    <main className="d-flex vh-100">
+      {/* Left Section */}
+      <Container fluid className="d-flex align-items-center justify-content-center flex-column w-50 bg-white">
+        <Row className="w-100 justify-content-center">
+          <Col xs={12} md={8} lg={6}>
+            <div className="text-center mb-4">
+              <h1 className="fw-bold">Welcome Back!</h1>
+            </div>
+            <Card className="border-0 shadow p-4">
               <Card.Body>
                 <Form method="post" onSubmit={handleSubmit}>
-                  <Form.Group controlId="formBasicEmail">
-                    <Form.Label>Email</Form.Label>
-                    <input name="email" type="text" className="form-control" />
+                  <Form.Group controlId="formBasicEmail" className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <Form.Control
+                      name="email"
+                      type="email"
+                      placeholder="Email address"
+                    />
                   </Form.Group>
-                  <Form.Group>
+                  <Form.Group controlId="formBasicPassword" className="mb-3">
                     <Form.Label>Password</Form.Label>
-                    <input name="password" type="password" className="form-control" />
+                    <Form.Control
+                      name="password"
+                      type="password"
+                      placeholder="Password"
+                    />
                   </Form.Group>
-                  <Button type="submit" className="mt-3">
-                    Signin
+                  <Button
+                    type="submit"
+                    className="w-100 mt-3 custom-button"
+                    style={{
+                      backgroundColor: 'var(--navbar-bg-color)',
+                      color: 'var(--navbar-text-color)',
+                      border: '1px solid var(--navbar-text-color)',
+                      borderRadius: '5px',
+                      padding: '0.5rem 1rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Sign In
                   </Button>
                 </Form>
               </Card.Body>
-              <Card.Footer>
-                Don&apos;t have an account?
-                <a href="/auth/signup">Sign up</a>
-              </Card.Footer>
             </Card>
+            <div className="text-center mt-4">
+              <p>
+                Don&apos;t Have An Account?
+                {' '}
+                <a href="/auth/signup">Sign Up For Spots!</a>
+              </p>
+            </div>
           </Col>
         </Row>
       </Container>
+
+      {/* Right Section */}
+      <div
+        className="w-50 d-none d-md-block"
+        style={{
+          backgroundImage: "url('/images/background.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+
     </main>
   );
 };
