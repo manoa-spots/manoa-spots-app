@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { Card, Col, Container, Button, Form, Row } from 'react-bootstrap';
+import router from 'next/router';
 import { createUser } from '@/lib/dbActions';
 
 type SignUpForm = {
@@ -41,18 +42,22 @@ const SignUp = () => {
     await createUser(data);
     // After creating, signIn with redirect to the add page
     await signIn('credentials', { callbackUrl: '/add', ...data });
+    router.push('/home');
   };
 
   return (
-    <main>
-      <Container>
-        <Row className="justify-content-center">
-          <Col xs={5}>
-            <h1 className="text-center">Sign Up</h1>
-            <Card>
+    <main className="d-flex vh-100">
+      {/* Left Section */}
+      <Container fluid className="d-flex align-items-center justify-content-center flex-column w-50 bg-white">
+        <Row className="w-100 justify-content-center">
+          <Col xs={12} md={8} lg={6}>
+            <div className="text-center mb-4">
+              <h1 className="fw-bold">Join Spots!</h1>
+            </div>
+            <Card className="border-0 shadow p-4">
               <Card.Body>
                 <Form onSubmit={handleSubmit(onSubmit)}>
-                  <Form.Group className="form-group">
+                  <Form.Group className="form-group mb-3">
                     <Form.Label>Email</Form.Label>
                     <input
                       type="text"
@@ -62,7 +67,7 @@ const SignUp = () => {
                     <div className="invalid-feedback">{errors.email?.message}</div>
                   </Form.Group>
 
-                  <Form.Group className="form-group">
+                  <Form.Group className="form-group mb-3">
                     <Form.Label>Password</Form.Label>
                     <input
                       type="password"
@@ -71,7 +76,7 @@ const SignUp = () => {
                     />
                     <div className="invalid-feedback">{errors.password?.message}</div>
                   </Form.Group>
-                  <Form.Group className="form-group">
+                  <Form.Group className="form-group mb-3">
                     <Form.Label>Confirm Password</Form.Label>
                     <input
                       type="password"
@@ -96,14 +101,28 @@ const SignUp = () => {
                   </Form.Group>
                 </Form>
               </Card.Body>
-              <Card.Footer>
-                Already have an account?
-                <a href="/auth/signin">Sign in</a>
-              </Card.Footer>
             </Card>
+            <div className="text-center mt-4">
+              <p>
+                Already On Spots?
+                {' '}
+                <a href="/auth/signin">Log In!</a>
+              </p>
+            </div>
           </Col>
         </Row>
       </Container>
+
+      {/* Right Section */}
+      <div
+        className="w-50 d-none d-md-block"
+        style={{
+          backgroundImage: "url('/images/background.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+
     </main>
   );
 };

@@ -90,15 +90,15 @@ const NavBar: React.FC = () => {
               href="/addspot"
               key="addspot"
             >
-              add spot
+              add spots
             </Nav.Link>
             <Nav.Link
               id={ComponentIDs.projectsMenuItem}
-              active={pathname === '/favorites'}
+              active={pathname === '/addspot'}
               href="/favorites"
               key="favorites"
             >
-              Favorites
+              favorites
             </Nav.Link>
             <Nav.Link
               id={ComponentIDs.projectsMenuItem}
