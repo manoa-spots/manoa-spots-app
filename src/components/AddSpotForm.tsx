@@ -79,7 +79,7 @@ const AddSpotForm = () => {
         throw new Error('Failed to add spot');
       }
 
-      const result = await response.json();
+      await response.json();
       swal('Success', 'Your spot has been added', 'success', {
         timer: 2000,
       });

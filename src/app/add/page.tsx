@@ -1,10 +1,10 @@
 // src/app/add/page.tsx
 import { getServerSession } from 'next-auth';
-import authOptions from '../../lib/authOptions';
-import { loggedInProtectedPage, type Session } from '../../lib/page-protection';
 import AddSpotForm from '@/components/AddSpotForm';
 import { Container, Row, Col } from 'react-bootstrap';
 import Image from 'next/image';
+import { loggedInProtectedPage, type Session } from '../../lib/page-protection';
+import { authOptions } from '../../lib/authOptions';
 
 const AddSpot = async () => {
   const session = await getServerSession(authOptions);
