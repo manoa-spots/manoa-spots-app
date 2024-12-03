@@ -20,7 +20,7 @@ export default async function Home() {
 
     return (
       <main>
-        <div id={PageIDs.landingPage}>
+        <div id={PageIDs.homePage}>
           <div className="landing-hero">
             <Container className="text-center landing-hero">
               <h1
