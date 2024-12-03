@@ -9,7 +9,7 @@ const ProfilePage = () => {
     profilePic: '/images/profile.jpg', // Replace with actual image path
     interests: ['Cafés', 'Matcha', 'Boba', 'Libraries'],
     year: 'Senior',
-    major: 'Computer Science',
+    major: 'ICS',
     courses: ['ICS 314', 'ICS 311', 'ICS 212'],
     favoriteSpots: [
       {
