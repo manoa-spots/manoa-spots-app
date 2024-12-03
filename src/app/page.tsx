@@ -1,50 +1,65 @@
-export default function Home() {
-  return (
-    <main>
-      <div id="landing-page">
-        {/* Hero Section */}
-        <div className="landing-hero text-center py-5" style={{ backgroundColor: '#f8f9fa' }}>
-          <h1 style={{ fontSize: '36pt', fontWeight: '600', color: '#343a40' }}>
-            Find your perfect spot!
-          </h1>
-        </div>
+import { Container, Row, Col } from 'react-bootstrap';
+import { PageIDs } from '@/utilities/ids';
+import SpotCard from '@/components/SpotCard';
+import type { Spot } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 
-        {/* Trending Spots Section */}
-        <div className="landing-white-background py-5" style={{ backgroundColor: 'white' }}>
-          <div className="container text-center">
-            <h2 className="trending mb-4" style={{ fontWeight: '500', fontSize: '28pt' }}>
-              Trending Spots
-            </h2>
-            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-              {/* Placeholder cards */}
-              <div className="col">
-                <div className="card h-100">
-                  <div className="card-body">
-                    <h5 className="card-title">Spot 1</h5>
-                    <p className="card-text">Description for Spot 1.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col">
-                <div className="card h-100">
-                  <div className="card-body">
-                    <h5 className="card-title">Spot 2</h5>
-                    <p className="card-text">Description for Spot 2.</p>
-                  </div>
-                </div>
-              </div>
-              <div className="col">
-                <div className="card h-100">
-                  <div className="card-body">
-                    <h5 className="card-title">Spot 3</h5>
-                    <p className="card-text">Description for Spot 3.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+async function getSpots(): Promise<(Spot & { _count: { reviews: number } })[]> {
+  return prisma.spot.findMany({
+    include: {
+      _count: {
+        select: { reviews: true },
+      },
+    },
+  });
+}
+
+export default async function Home() {
+  try {
+    const spots = await getSpots();
+
+    return (
+      <main>
+        <div id={PageIDs.landingPage}>
+          <div className="landing-hero">
+            <Container className="text-center landing-hero">
+              <h1
+                style={{
+                  fontSize: '36pt',
+                  fontWeight: '600',
+                  color: 'var(--primary-dark)',
+                }}
+              >
+                find your perfect spot!
+              </h1>
+            </Container>
+          </div>
+          <div>
+            <Container
+              className="landing-white-background justify-content-center text-center"
+              style={{ backgroundColor: 'white' }}
+            >
+              <h2 className="trending">trending spots</h2>
+              <Container className="py-5">
+                <Row xs={1} md={2} lg={3} className="g-4">
+                  {spots.map((spot) => (
+                    <Col key={spot.id}>
+                      <SpotCard spot={spot} />
+                    </Col>
+                  ))}
+                </Row>
+              </Container>
+            </Container>
           </div>
         </div>
-      </div>
-    </main>
-  );
+      </main>
+    );
+  } catch (error) {
+    console.error('Error fetching spots:', error);
+    return (
+      <main>
+        <div>Error loading spots. Please try again later.</div>
+      </main>
+    );
+  }
 }

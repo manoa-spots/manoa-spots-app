@@ -1,89 +1,108 @@
 'use server';
 
-import { Stuff, Condition } from '@prisma/client';
+import { Spot } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { redirect } from 'next/navigation';
 import { prisma } from './prisma';
 
+type SpotInput = {
+  name: string;
+  description: string;
+  imageUrl: string;
+  rating: number;
+  numReviews: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+  hasOutlets: boolean;
+  hasParking: boolean;
+  hasFoodDrinks: boolean;
+  maxGroupSize: number;
+  type: 'LIBRARY' | 'CAFE' | 'OTHER';
+};
+
 /**
- * Adds a new stuff to the database.
- * @param stuff, an object with the following properties: name, quantity, owner, condition.
+ * Adds a new spot to the database.
+ * @param spot The spot data to add
  */
-export async function addStuff(stuff: { name: string; quantity: number; owner: string; condition: string }) {
-  // console.log(`addStuff data: ${JSON.stringify(stuff, null, 2)}`);
-  let condition: Condition = 'good';
-  if (stuff.condition === 'poor') {
-    condition = 'poor';
-  } else if (stuff.condition === 'excellent') {
-    condition = 'excellent';
-  } else {
-    condition = 'fair';
-  }
-  await prisma.stuff.create({
+export async function addSpot(spot: SpotInput) {
+  await prisma.spot.create({
     data: {
-      name: stuff.name,
-      quantity: stuff.quantity,
-      owner: stuff.owner,
-      condition,
+      name: spot.name,
+      description: spot.description,
+      imageUrl: spot.imageUrl,
+      rating: spot.rating,
+      numReviews: spot.numReviews,
+      address: spot.address,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      hasOutlets: spot.hasOutlets,
+      hasParking: spot.hasParking,
+      hasFoodDrinks: spot.hasFoodDrinks,
+      maxGroupSize: spot.maxGroupSize,
+      type: spot.type,
     },
   });
-  // After adding, redirect to the list page
   redirect('/list');
 }
 
 /**
- * Edits an existing stuff in the database.
- * @param stuff, an object with the following properties: id, name, quantity, owner, condition.
+ * Edits an existing spot in the database.
+ * @param spot The spot data to update
  */
-export async function editStuff(stuff: Stuff) {
-  // console.log(`editStuff data: ${JSON.stringify(stuff, null, 2)}`);
-  await prisma.stuff.update({
-    where: { id: stuff.id },
+export async function editSpot(spot: Spot) {
+  await prisma.spot.update({
+    where: { id: spot.id },
     data: {
-      name: stuff.name,
-      quantity: stuff.quantity,
-      owner: stuff.owner,
-      condition: stuff.condition,
+      name: spot.name,
+      description: spot.description,
+      imageUrl: spot.imageUrl,
+      rating: spot.rating,
+      numReviews: spot.numReviews,
+      address: spot.address,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      hasOutlets: spot.hasOutlets,
+      hasParking: spot.hasParking,
+      hasFoodDrinks: spot.hasFoodDrinks,
+      maxGroupSize: spot.maxGroupSize,
+      type: spot.type,
     },
   });
-  // After updating, redirect to the list page
   redirect('/list');
 }
 
 /**
- * Deletes an existing stuff from the database.
- * @param id, the id of the stuff to delete.
+ * Deletes an existing spot from the database.
+ * @param id The ID of the spot to delete
  */
-export async function deleteStuff(id: number) {
-  // console.log(`deleteStuff id: ${id}`);
-  await prisma.stuff.delete({
+export async function deleteSpot(id: string) {
+  await prisma.spot.delete({
     where: { id },
   });
-  // After deleting, redirect to the list page
   redirect('/list');
 }
 
 /**
  * Creates a new user in the database.
- * @param credentials, an object with the following properties: email, password.
+ * @param credentials The user credentials
  */
 export async function createUser(credentials: { email: string; password: string }) {
-  // console.log(`createUser data: ${JSON.stringify(credentials, null, 2)}`);
   const password = await hash(credentials.password, 10);
   await prisma.user.create({
     data: {
       email: credentials.email,
       password,
+      role: 'USER', // Setting default role
     },
   });
 }
 
 /**
  * Changes the password of an existing user in the database.
- * @param credentials, an object with the following properties: email, password.
+ * @param credentials The user credentials
  */
 export async function changePassword(credentials: { email: string; password: string }) {
-  // console.log(`changePassword data: ${JSON.stringify(credentials, null, 2)}`);
   const password = await hash(credentials.password, 10);
   await prisma.user.update({
     where: { email: credentials.email },

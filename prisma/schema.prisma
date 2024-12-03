@@ -4,23 +4,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
-}
-
-model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     Role   @default(USER)
-}
-
-model Stuff {
-  id        Int       @id @default(autoincrement())
-  name      String
-  quantity  Int
-  condition Condition
-  owner     String
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -28,9 +12,64 @@ enum Role {
   ADMIN
 }
 
-enum Condition {
-  excellent
-  good
-  fair
-  poor
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  password String
+  role     Role     @default(USER)
+  reviews  Review[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  bio       String
+  picture   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Spot {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String?
+  imageUrl      String
+  rating        Float    @default(0)
+  numReviews    Int      @default(0)
+  address       String
+  latitude      Float
+  longitude     Float
+  hasOutlets    Boolean  @default(false)
+  hasParking    Boolean  @default(false)
+  hasFoodDrinks Boolean  @default(false)
+  maxGroupSize  Int      @default(1)
+  type          String
+  reviews       Review[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spotId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([spotId])
+  @@index([userId])
+}
+
+model Stuff {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
 }
