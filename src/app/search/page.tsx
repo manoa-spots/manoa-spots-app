@@ -4,50 +4,82 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import SpotCard from '@/components/SpotCard';
+import FilterForm from '@/components/FilterForm';
 import type { Spot } from '@prisma/client';
 
 const SearchPage: React.FC = () => {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.trim().toLowerCase() || '';
   const [spots, setSpots] = useState<Spot[]>([]);
+  const [filters, setFilters] = useState({
+    hasOutlets: false,
+    hasParking: false,
+    hasFoodDrinks: false,
+    maxGroupSize: '',
+    type: '',
+  });
+
+  const handleApplyFilters = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+  };
 
   useEffect(() => {
-    if (!query) return; // Avoid unnecessary fetches if there's no query
-    fetch(`/api/spots?q=${encodeURIComponent(query)}`) // Pass the query to the API
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Fetched spots:', data); // Log for debugging
-        setSpots(data); // Update the state with the fetched spots
-      })
-      .catch((err) => console.error('Error fetching spots:', err));
-  }, [query]);
+    const fetchSpots = async () => {
+      try {
+        const params = new URLSearchParams({
+          q: query,
+          hasOutlets: filters.hasOutlets.toString(),
+          hasParking: filters.hasParking.toString(),
+          hasFoodDrinks: filters.hasFoodDrinks.toString(),
+          maxGroupSize: filters.maxGroupSize || '',
+          type: filters.type || '',
+        });
 
-  const filteredSpots = spots.filter(
-    (spot) => spot.name.toLowerCase().includes(query)
-      || spot.type.toLowerCase().includes(query)
-      || spot.address.toLowerCase().includes(query)
-      || spot.description?.toLowerCase().includes(query),
-  );
+        const response = await fetch(`/api/spots?${params.toString()}`);
 
-  console.log('Filtered spots:', filteredSpots); // Debugging
+        if (!response.ok) {
+          console.error('API Error:', await response.text());
+          setSpots([]); // Set spots to an empty array on API error
+          return;
+        }
+
+        const text = await response.text(); // Fetch the raw text response
+        if (text) {
+          const data = JSON.parse(text); // Parse only if text is not empty
+          setSpots(data);
+        } else {
+          setSpots([]); // Handle empty response gracefully
+        }
+      } catch (error) {
+        console.error('Fetch Error:', error); // Log any fetch errors
+        setSpots([]); // Set spots to an empty array on fetch failure
+      }
+    };
+
+    fetchSpots();
+  }, [query, filters]);
 
   return (
-    <Container>
-      <div className="mt-5">
-        <h1>
-          Spot Results
-        </h1>
-      </div>
+    <Container className="mt-5">
       <Row>
-        {filteredSpots.length > 0 ? (
-          filteredSpots.map((spot) => (
-            <Col md={4} key={spot.id} className="mb-4">
-              <SpotCard spot={spot} />
-            </Col>
-          ))
-        ) : (
-          <p>Sorry, no spots match your search query. Try searching for a different spot or add your own!</p>
-        )}
+        <Col md={3}>
+          <h4>Filters</h4>
+          <FilterForm onApplyFilters={handleApplyFilters} />
+        </Col>
+        <Col md={9}>
+          <h4>Spot Results</h4>
+          <Row>
+            {spots.length > 0 ? (
+              spots.map((spot) => (
+                <Col md={4} key={spot.id} className="mb-4">
+                  <SpotCard spot={spot} />
+                </Col>
+              ))
+            ) : (
+              <p>No spots match your search criteria. Try adjusting the filters!</p>
+            )}
+          </Row>
+        </Col>
       </Row>
     </Container>
   );
