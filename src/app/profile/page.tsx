@@ -1,102 +1,85 @@
 'use client';
 
-import { Container, Row, Col, Card, Image } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
 
 const ProfilePage = () => {
-  // Mock data for the profile page
-  const user = {
-    name: 'Jane Doe',
-    profilePic: '/images/profile.jpg', // Replace with actual image path
-    interests: ['Cafés', 'Matcha', 'Boba', 'Libraries'],
-    year: 'Senior',
-    major: 'ICS',
-    courses: ['ICS 314', 'ICS 311', 'ICS 212'],
-    favoriteSpots: [
-      {
-        name: 'Broome St General Store',
-        image: '/images/broome-store.jpg',
-      },
-      {
-        name: 'Holoholo Drive-Thru Espresso',
-        image: '/images/holoholo.jpg',
-      },
-    ],
-  };
+  const [profile, setProfile] = useState<any>(null); // We'll use `any` to handle the profile data for simplicity
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile'); // API route to fetch profile data
+        if (!response.ok) {
+          throw new Error('Profile Not Found :(');
+        }
+        const data = await response.json();
+        setProfile(data);
+      } catch (fetchError: any) {
+        setError(fetchError.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div>
+        Error:
+        {error}
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return <div>No profile found</div>;
+  }
 
   return (
-    <Container className="my-4">
+    <div className="container">
       {/* Profile Header */}
-      <Row className="align-items-center mb-4">
-        <Col xs={12} md={4} className="text-center">
-          <Image
-            src={user.profilePic}
-            style={{ width: '200px', objectFit: 'cover' }}
-            alt={`${user.name}'s profile picture`}
-          />
-        </Col>
-        <Col xs={12} md={8}>
-          <h1>{user.name}</h1>
-          <p>
-            <strong>Year:</strong>
-            {' '}
-            {user.year}
-          </p>
-          <p>
-            <strong>Major:</strong>
-            {' '}
-            {user.major}
-          </p>
-        </Col>
-      </Row>
+      <div className="profile-header">
+        <h1>
+          {profile.firstName}
+          {' '}
+          {profile.lastName}
+        </h1>
+        <p>
+          <strong>Email:</strong>
+          {' '}
+          {profile.email}
+        </p>
+        <p>
+          <strong>Bio:</strong>
+          {' '}
+          {profile.bio}
+        </p>
+      </div>
 
-      {/* Interests Section */}
-      <Row className="mb-4">
-        <Col>
-          <h2>Interests</h2>
-          <ul>
-            {user.interests.map((interest) => (
-              <li key={interest}>{interest}</li> // Use the interest as the key
-            ))}
-          </ul>
-        </Col>
-      </Row>
-
-      {/* Courses Section */}
-      <Row className="mb-4">
-        <Col>
-          <h2>Courses</h2>
-          <ul>
-            {user.courses.map((course) => (
-              <li key={course}>{course}</li>
-            ))}
-          </ul>
-        </Col>
-      </Row>
-
-      {/* Favorite Spots Section */}
-      <Row>
-        <Col>
-          <h2>Favorite Spots</h2>
-          <Row>
-            {user.favoriteSpots.map((spot) => (
-              <Col key={spot.name} xs={12} md={6} className="mb-4">
-                <Card>
-                  <Card.Img
-                    variant="top"
-                    src={spot.image}
-                    alt={`${spot.name} image`}
-                    style={{ height: '200px', objectFit: 'cover' }}
-                  />
-                  <Card.Body>
-                    <Card.Title>{spot.name}</Card.Title>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Col>
-      </Row>
-    </Container>
+      {/* Additional Profile Information (Interests, Courses, etc.) */}
+      <div className="profile-info">
+        <h2>Interests</h2>
+        <ul>
+          {profile.interests?.map((interest: string) => (
+            <li key={interest}>{interest}</li>
+          ))}
+        </ul>
+        <h2>Courses</h2>
+        <ul>
+          {profile.courses?.map((course: string) => (
+            <li key={course}>{course}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 };
 
