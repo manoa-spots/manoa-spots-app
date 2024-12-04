@@ -91,7 +91,8 @@ async function main() {
       create: {
         name: 'Sinclair Library',
         description: '24/7 study space with comfortable seating',
-        imageUrl: 'https://historichawaii.org/wp-content/uploads/2014/02/Oahu_Honolulu_CampusRoad_2425_photo_byIanClagstone.jpg',
+        imageUrl:
+        'https://historichawaii.org/wp-content/uploads/2014/02/Oahu_Honolulu_CampusRoad_2425_photo_byIanClagstone.jpg',
         rating: 3.2,
         numReviews: 89,
         address: '2425 Campus Rd, Honolulu, HI 96822',
@@ -110,7 +111,8 @@ async function main() {
       create: {
         name: 'Island Brew Coffee House',
         description: 'Good coffee and pastries with indoor seating',
-        imageUrl: 'https://www.islandbrewcoffeehouse.com/uploads/1/3/7/0/13708134/ffea10a9-7143-47ff-99aa-3726e676211f_orig.jpeg',
+        imageUrl:
+        'https://www.islandbrewcoffeehouse.com/uploads/1/3/7/0/13708134/ffea10a9-7143-47ff-99aa-3726e676211f_orig.jpeg',
         rating: 5.0,
         numReviews: 20,
         address: '1810 University Ave, Honolulu, HI 96822',
