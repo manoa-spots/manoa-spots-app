@@ -7,17 +7,11 @@ import SpotCard from '@/components/SpotCard';
 import FilterForm from '@/components/FilterForm';
 import type { Spot } from '@prisma/client';
 
-const SearchPage: React.FC = () => {
+const SearchContent: React.FC = () => {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.trim().toLowerCase() || '';
   const [spots, setSpots] = useState<Spot[]>([]);
-  const [filters, setFilters] = useState<{
-    hasOutlets: boolean;
-    hasParking: boolean;
-    hasFoodDrinks: boolean;
-    maxGroupSize: string;
-    type: string;
-  }>({
+  const [filters, setFilters] = useState({
     hasOutlets: false,
     hasParking: false,
     hasFoodDrinks: false,
@@ -25,13 +19,7 @@ const SearchPage: React.FC = () => {
     type: '',
   });
 
-  const handleApplyFilters = (newFilters: {
-    hasOutlets: boolean;
-    hasParking: boolean;
-    hasFoodDrinks: boolean;
-    maxGroupSize: string;
-    type: string;
-  }) => {
+  const handleApplyFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
   };
 
@@ -51,15 +39,20 @@ const SearchPage: React.FC = () => {
 
         if (!response.ok) {
           console.error('API Error:', await response.text());
-          setSpots([]); // Handle API errors gracefully
+          setSpots([]); // Set spots to an empty array on API error
           return;
         }
 
-        const data = await response.json(); // Parse JSON response
-        setSpots(data || []); // Ensure empty array on no results
+        const text = await response.text(); // Fetch the raw text response
+        if (text) {
+          const data = JSON.parse(text); // Parse only if text is not empty
+          setSpots(data);
+        } else {
+          setSpots([]); // Handle empty response gracefully
+        }
       } catch (error) {
-        console.error('Fetch Error:', error); // Handle fetch errors
-        setSpots([]); // Set spots to an empty array on failure
+        console.error('Fetch Error:', error); // Log any fetch errors
+        setSpots([]); // Set spots to an empty array on fetch failure
       }
     };
 
@@ -70,30 +63,26 @@ const SearchPage: React.FC = () => {
     <Container className="mt-5">
       <Row>
         <Col md={3}>
-          <div className="filter-card p-3">
-            <h4 className="filter-title">Filters</h4>
-            <FilterForm onApplyFilters={handleApplyFilters} />
-          </div>
+          <h4>Filters</h4>
+          <FilterForm onApplyFilters={handleApplyFilters} />
         </Col>
         <Col md={9}>
-          <div>
-            <h4 className="mb-4">Spot Results</h4>
-            <Row>
-              {spots.length > 0 ? (
-                spots.map((spot) => (
-                  <Col md={4} key={spot.id} className="mb-4">
-                    <SpotCard spot={spot} />
-                  </Col>
-                ))
-              ) : (
-                <p>No spots match your search criteria. Try adjusting the filters!</p>
-              )}
-            </Row>
-          </div>
+          <h4>Spot Results</h4>
+          <Row>
+            {spots.length > 0 ? (
+              spots.map((spot) => (
+                <Col md={4} key={spot.id} className="mb-4">
+                  <SpotCard spot={spot} />
+                </Col>
+              ))
+            ) : (
+              <p>No spots match your search criteria. Try adjusting the filters!</p>
+            )}
+          </Row>
         </Col>
       </Row>
     </Container>
   );
 };
 
-export default SearchPage;
+export default SearchContent;
