@@ -7,19 +7,27 @@ import SpotCard from '@/components/SpotCard';
 import FilterForm from '@/components/FilterForm';
 import type { Spot } from '@prisma/client';
 
+interface Filters {
+  hasOutlets: boolean;
+  hasParking: string; // Changed from boolean to string
+  hasFoodDrinks: boolean;
+  maxGroupSize: string;
+  type: string;
+}
+
 const SearchContent: React.FC = () => {
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.trim().toLowerCase() || '';
   const [spots, setSpots] = useState<Spot[]>([]);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     hasOutlets: false,
-    hasParking: false,
+    hasParking: 'No', // Changed default value
     hasFoodDrinks: false,
     maxGroupSize: '',
     type: '',
   });
 
-  const handleApplyFilters = (newFilters: typeof filters) => {
+  const handleApplyFilters = (newFilters: Filters) => {
     setFilters(newFilters);
   };
 
@@ -29,7 +37,7 @@ const SearchContent: React.FC = () => {
         const params = new URLSearchParams({
           q: query,
           hasOutlets: filters.hasOutlets.toString(),
-          hasParking: filters.hasParking.toString(),
+          hasParking: filters.hasParking,
           hasFoodDrinks: filters.hasFoodDrinks.toString(),
           maxGroupSize: filters.maxGroupSize || '',
           type: filters.type || '',
@@ -39,20 +47,20 @@ const SearchContent: React.FC = () => {
 
         if (!response.ok) {
           console.error('API Error:', await response.text());
-          setSpots([]); // Set spots to an empty array on API error
+          setSpots([]);
           return;
         }
 
-        const text = await response.text(); // Fetch the raw text response
+        const text = await response.text();
         if (text) {
-          const data = JSON.parse(text); // Parse only if text is not empty
+          const data = JSON.parse(text);
           setSpots(data);
         } else {
-          setSpots([]); // Handle empty response gracefully
+          setSpots([]);
         }
       } catch (error) {
-        console.error('Fetch Error:', error); // Log any fetch errors
-        setSpots([]); // Set spots to an empty array on fetch failure
+        console.error('Fetch Error:', error);
+        setSpots([]);
       }
     };
 
