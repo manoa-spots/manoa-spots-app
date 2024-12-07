@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ParkingCircle, Coffee, Users, Library, Power } from 'lucide-react';
 
 interface FilterFormProps {
   onApplyFilters: (filters: {
     hasOutlets: boolean;
-    hasParking: boolean;
+    hasParking: string;
     hasFoodDrinks: boolean;
     maxGroupSize: string;
     type: string;
@@ -15,7 +16,7 @@ interface FilterFormProps {
 const FilterForm: React.FC<FilterFormProps> = ({ onApplyFilters }) => {
   const [filters, setFilters] = useState({
     hasOutlets: false,
-    hasParking: false,
+    hasParking: 'No',
     hasFoodDrinks: false,
     maxGroupSize: '',
     type: '',
@@ -36,70 +37,108 @@ const FilterForm: React.FC<FilterFormProps> = ({ onApplyFilters }) => {
 
   return (
     <div className="filter-card">
+      <h3 className="section-header">Filter Spots</h3>
       <form onSubmit={handleSubmit}>
-        <div className="filter-group">
-          <label htmlFor="hasOutlets" className="checkbox-label">
-            <input
-              type="checkbox"
-              id="hasOutlets"
-              name="hasOutlets"
-              checked={filters.hasOutlets}
-              onChange={handleChange}
-            />
-            Outlets
-          </label>
-          <label htmlFor="hasParking" className="checkbox-label">
-            <input
-              type="checkbox"
-              id="hasParking"
-              name="hasParking"
-              checked={filters.hasParking}
-              onChange={handleChange}
-            />
-            Parking
-          </label>
-          <label htmlFor="hasFoodDrinks" className="checkbox-label">
-            <input
-              type="checkbox"
-              id="hasFoodDrinks"
-              name="hasFoodDrinks"
-              checked={filters.hasFoodDrinks}
-              onChange={handleChange}
-            />
-            Food/Drinks
-          </label>
+        {/* Amenities Section */}
+        <div className="form-section">
+          <h4 className="section-header">
+            <span className="d-flex align-items-center gap-2">Amenities</span>
+          </h4>
+          <div className="amenities-container">
+            <label htmlFor="hasOutlets" className="checkbox-label">
+              <input
+                type="checkbox"
+                id="hasOutlets"
+                name="hasOutlets"
+                checked={filters.hasOutlets}
+                onChange={handleChange}
+              />
+              <Power size={16} className="me-2" />
+              <span>Outlets Available</span>
+            </label>
+
+            <label htmlFor="hasFoodDrinks" className="checkbox-label">
+              <input
+                type="checkbox"
+                id="hasFoodDrinks"
+                name="hasFoodDrinks"
+                checked={filters.hasFoodDrinks}
+                onChange={handleChange}
+              />
+              <Coffee size={16} className="me-2" />
+              <span>Food/Drinks Allowed</span>
+            </label>
+          </div>
         </div>
-        <div className="filter-group">
-          <label htmlFor="maxGroupSize" className="form-label">
-            Max Group Size:
-            <input
-              type="number"
-              id="maxGroupSize"
-              name="maxGroupSize"
-              value={filters.maxGroupSize}
-              onChange={handleChange}
-              className="form-control"
-            />
-          </label>
+
+        {/* Parking Section */}
+        <div className="form-section">
+          <h4 className="section-header">
+            <span className="d-flex align-items-center gap-2">
+              <ParkingCircle size={16} />
+              Parking Options
+            </span>
+          </h4>
+          <select
+            id="hasParking"
+            name="hasParking"
+            value={filters.hasParking}
+            onChange={handleChange}
+            className="form-control"
+          >
+            <option value="">Any Parking</option>
+            <option value="Yes">Parking Available</option>
+            <option value="No">No Parking</option>
+            <option value="Street parking only">Street Parking Only</option>
+            <option value="Campus parking pass required">Campus Parking Required</option>
+            <option value="Paid parking available">Paid Parking</option>
+          </select>
         </div>
-        <div className="filter-group">
-          <label htmlFor="type" className="form-label">
-            Type:
-            <select
-              id="type"
-              name="type"
-              value={filters.type}
-              onChange={handleChange}
-              className="form-control"
-            >
-              <option value="">Any</option>
-              <option value="library">Library</option>
-              <option value="cafe">Cafe</option>
-              <option value="park">Park</option>
-            </select>
-          </label>
+
+        {/* Capacity Section */}
+        <div className="form-section">
+          <h4 className="section-header">
+            <span className="d-flex align-items-center gap-2">
+              <Users size={16} />
+              Group Size
+            </span>
+          </h4>
+          <input
+            type="number"
+            id="maxGroupSize"
+            name="maxGroupSize"
+            value={filters.maxGroupSize}
+            onChange={handleChange}
+            placeholder="Minimum capacity needed"
+            className="form-control"
+            min="1"
+          />
         </div>
-        <button type="submit" className="btn btn-primary w-100 mt-3">
+
+        {/* Type Section */}
+        <div className="form-section">
+          <h4 className="section-header">
+            <span className="d-flex align-items-center gap-2">
+              <Library size={16} />
+              Spot Type
+            </span>
+          </h4>
+          <select
+            id="type"
+            name="type"
+            value={filters.type}
+            onChange={handleChange}
+            className="form-control"
+          >
+            <option value="">Any Type</option>
+            <option value="LIBRARY">Library</option>
+            <option value="CAFE">Café</option>
+            <option value="COWORKING">Coworking Space</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <button type="submit" className="btn btn-primary w-100 mt-4">
           Apply Filters
         </button>
       </form>

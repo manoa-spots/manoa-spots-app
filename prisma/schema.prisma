@@ -34,19 +34,21 @@ model Profile {
 }
 
 model Spot {
-  id            String   @id @default(cuid())
+  id            String   @id @default(uuid())
   name          String   @unique
   description   String?
   imageUrl      String
   rating        Float    @default(0)
   numReviews    Int      @default(0)
   address       String
-  latitude      Float
-  longitude     Float
+  zipCode       String
+  hours         Json     
+  amenities     String[]
   hasOutlets    Boolean  @default(false)
-  hasParking    Boolean  @default(false)
+  hasParking    String
   hasFoodDrinks Boolean  @default(false)
   maxGroupSize  Int      @default(1)
+  minGroupSize  Int      @default(1)
   type          String
   reviews       Review[]
   createdAt     DateTime @default(now())
@@ -54,7 +56,7 @@ model Spot {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   rating    Int
   comment   String?
   spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)

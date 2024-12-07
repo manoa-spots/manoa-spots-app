@@ -1,5 +1,6 @@
 import { PrismaClient, Role } from '@prisma/client';
 import { hash } from 'bcrypt';
+import spots from './seed/spotData';
 import * as config from '../config/settings.development.json';
 
 const prisma = new PrismaClient();
@@ -44,13 +45,10 @@ const users = [
 async function main() {
   console.log('Seeding the database');
   const password = await hash('changeme', 10);
-  
+
   // Seed default accounts from config
-  for (const account of config.defaultAccounts) {
-    let role: Role = 'USER';
-    if (account.role === 'ADMIN') {
-      role = 'ADMIN';
-    }
+  await Promise.all(config.defaultAccounts.map(async (account) => {
+    const role: Role = account.role === 'ADMIN' ? 'ADMIN' : 'USER';
     console.log(`  Creating user: ${account.email} with role: ${role}`);
     await prisma.user.upsert({
       where: { email: account.email },
@@ -61,77 +59,59 @@ async function main() {
         role,
       },
     });
+  }));
+
+  // Create spots from imported data
+  console.log('Creating spots...');
+  const createdSpots = await Promise.all(
+    spots.map((spot) => prisma.spot.upsert({
+      where: { name: spot.name },
+      update: {},
+      create: spot,
+    })),
+  );
+
+  async function seedSpots() {
+    try {
+      console.log('Seeding spots...');
+      await Promise.all(
+        spots.map(async (spot) => {
+          await prisma.spot.upsert({
+            where: { name: spot.name },
+            update: {},
+            create: {
+              name: spot.name,
+              description: spot.description,
+              imageUrl: spot.imageUrl,
+              rating: spot.rating,
+              numReviews: spot.numReviews,
+              address: spot.address,
+              zipCode: spot.zipCode,
+              hours: JSON.stringify(spot.hours),
+              amenities: spot.amenities,
+              hasOutlets: spot.hasOutlets,
+              hasParking: spot.hasParking,
+              hasFoodDrinks: spot.hasFoodDrinks,
+              maxGroupSize: spot.maxGroupSize,
+              minGroupSize: spot.minGroupSize,
+              type: spot.type,
+            },
+          });
+        }),
+      );
+      console.log('Seeding completed.');
+    } catch (error) {
+      console.error('Error seeding spots:', error);
+    } finally {
+      await prisma.$disconnect();
+    }
   }
 
-  // Create spots
-  console.log('Creating spots...');
-  const spots = await Promise.all([
-    prisma.spot.upsert({
-      where: { name: 'Hamilton Library' },
-      update: {},
-      create: {
-        name: 'Hamilton Library',
-        description: 'Quiet study space with multiple floors',
-        imageUrl: 'https://www.hawaii.edu/news/wp-content/uploads/2020/10/manoa-hamilton-library-signs.jpg',
-        rating: 4.5,
-        numReviews: 125,
-        address: '2550 McCarthy Mall, Honolulu, HI 96822',
-        latitude: 21.3001,
-        longitude: -157.8161,
-        hasOutlets: true,
-        hasParking: true,
-        hasFoodDrinks: false,
-        maxGroupSize: 6,
-        type: 'LIBRARY',
-      },
-    }),
-    prisma.spot.upsert({
-      where: { name: 'Sinclair Library' },
-      update: {},
-      create: {
-        name: 'Sinclair Library',
-        description: '24/7 study space with comfortable seating',
-        imageUrl:
-        'https://historichawaii.org/wp-content/uploads/2014/02/Oahu_Honolulu_CampusRoad_2425_photo_byIanClagstone.jpg',
-        rating: 3.2,
-        numReviews: 89,
-        address: '2425 Campus Rd, Honolulu, HI 96822',
-        latitude: 21.2999,
-        longitude: -157.8190,
-        hasOutlets: true,
-        hasParking: true,
-        hasFoodDrinks: true,
-        maxGroupSize: 4,
-        type: 'LIBRARY',
-      },
-    }),
-    prisma.spot.upsert({
-      where: { name: 'Island Brew Coffee House' },
-      update: {},
-      create: {
-        name: 'Island Brew Coffee House',
-        description: 'Good coffee and pastries with indoor seating',
-        imageUrl:
-        'https://www.islandbrewcoffeehouse.com/uploads/1/3/7/0/13708134/ffea10a9-7143-47ff-99aa-3726e676211f_orig.jpeg',
-        rating: 5.0,
-        numReviews: 20,
-        address: '1810 University Ave, Honolulu, HI 96822',
-        latitude: 21.2999,
-        longitude: -157.8190,
-        hasOutlets: true,
-        hasParking: false,
-        hasFoodDrinks: true,
-        maxGroupSize: 4,
-        type: 'CAFE',
-      },
-    }),
-  ]);
-
-  console.log('Spots created successfully');
+  seedSpots();
 
   // Create users and profiles
   console.log('Creating users and profiles...');
-  for (const userData of users) {
+  await Promise.all(users.map(async (userData) => {
     const hashedPassword = await hash(userData.password, 10);
     const user = await prisma.user.upsert({
       where: { email: userData.email },
@@ -156,17 +136,17 @@ async function main() {
     });
 
     // Create some sample reviews
-    if (spots.length > 0) {
+    if (createdSpots.length > 0) {
       await prisma.review.create({
         data: {
           rating: 4,
           comment: 'Great study spot!',
           userId: user.id,
-          spotId: spots[0].id,
+          spotId: createdSpots[0].id,
         },
       });
     }
-  }
+  }));
 
   console.log('Seeding completed');
 }

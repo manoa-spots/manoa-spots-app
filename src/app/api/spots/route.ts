@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     // Parse query parameters
     const query = url.searchParams.get('q')?.toLowerCase();
     const hasOutlets = url.searchParams.get('hasOutlets') === 'true';
-    const hasParking = url.searchParams.get('hasParking') === 'true';
+    const hasParking = url.searchParams.get('hasParking'); // Get raw value
     const hasFoodDrinks = url.searchParams.get('hasFoodDrinks') === 'true';
     const maxGroupSize = parseInt(url.searchParams.get('maxGroupSize') || '0', 10);
     const type = url.searchParams.get('type')?.toLowerCase();
@@ -31,7 +31,14 @@ export async function GET(req: Request) {
       });
     }
     if (hasOutlets) filters.push({ hasOutlets: true });
-    if (hasParking) filters.push({ hasParking: true });
+    // Handle hasParking as a string filter
+    if (hasParking === 'true') {
+      filters.push({
+        hasParking: {
+          notIn: ['No', 'none', 'None', ''],
+        },
+      });
+    }
     if (hasFoodDrinks) filters.push({ hasFoodDrinks: true });
     if (maxGroupSize) filters.push({ maxGroupSize: { gte: maxGroupSize } });
     if (type) filters.push({ type: { contains: type, mode: 'insensitive' } });

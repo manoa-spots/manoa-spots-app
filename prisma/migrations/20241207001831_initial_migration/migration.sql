@@ -1,30 +1,17 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
 
-  - You are about to drop the column `condition` on the `Stuff` table. All the data in the column will be lost.
-  - You are about to drop the column `owner` on the `Stuff` table. All the data in the column will be lost.
-  - You are about to drop the column `quantity` on the `Stuff` table. All the data in the column will be lost.
-  - The primary key for the `User` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'USER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-*/
--- AlterTable
-ALTER TABLE "Stuff" DROP COLUMN "condition",
-DROP COLUMN "owner",
-DROP COLUMN "quantity",
-ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
-
--- AlterTable
-ALTER TABLE "User" DROP CONSTRAINT "User_pkey",
-ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "id" DROP DEFAULT,
-ALTER COLUMN "id" SET DATA TYPE TEXT,
-ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
-DROP SEQUENCE "User_id_seq";
-
--- DropEnum
-DROP TYPE "Condition";
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Profile" (
@@ -49,12 +36,14 @@ CREATE TABLE "Spot" (
     "rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "numReviews" INTEGER NOT NULL DEFAULT 0,
     "address" TEXT NOT NULL,
-    "latitude" DOUBLE PRECISION NOT NULL,
-    "longitude" DOUBLE PRECISION NOT NULL,
+    "zipCode" TEXT NOT NULL,
+    "hours" JSONB NOT NULL,
+    "amenities" TEXT[],
     "hasOutlets" BOOLEAN NOT NULL DEFAULT false,
-    "hasParking" BOOLEAN NOT NULL DEFAULT false,
+    "hasParking" TEXT NOT NULL,
     "hasFoodDrinks" BOOLEAN NOT NULL DEFAULT false,
     "maxGroupSize" INTEGER NOT NULL DEFAULT 1,
+    "minGroupSize" INTEGER NOT NULL DEFAULT 1,
     "type" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -74,6 +63,18 @@ CREATE TABLE "Review" (
 
     CONSTRAINT "Review_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "Stuff" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Stuff_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Profile_email_key" ON "Profile"("email");

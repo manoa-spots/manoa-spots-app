@@ -1,6 +1,6 @@
 'use server';
 
-import { Spot } from '@prisma/client';
+import { Spot, Prisma } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { redirect } from 'next/navigation';
 import { prisma } from './prisma';
@@ -12,14 +12,24 @@ type SpotInput = {
   rating: number;
   numReviews: number;
   address: string;
-  latitude: number;
-  longitude: number;
+  zipCode: string;
   hasOutlets: boolean;
-  hasParking: boolean;
+  hasParking: string;
   hasFoodDrinks: boolean;
   maxGroupSize: number;
-  type: 'LIBRARY' | 'CAFE' | 'OTHER';
+  type: 'LIBRARY' | 'CAFE' | 'OUTDOOR' | 'OTHER';
+  hours: Prisma.InputJsonValue;
 };
+
+const defaultHours = {
+  monday: '9:00 AM - 5:00 PM',
+  tuesday: '9:00 AM - 5:00 PM',
+  wednesday: '9:00 AM - 5:00 PM',
+  thursday: '9:00 AM - 5:00 PM',
+  friday: '9:00 AM - 5:00 PM',
+  saturday: 'Closed',
+  sunday: 'Closed',
+} as const;
 
 /**
  * Adds a new spot to the database.
@@ -34,13 +44,13 @@ export async function addSpot(spot: SpotInput) {
       rating: spot.rating,
       numReviews: spot.numReviews,
       address: spot.address,
-      latitude: spot.latitude,
-      longitude: spot.longitude,
+      zipCode: spot.zipCode,
       hasOutlets: spot.hasOutlets,
       hasParking: spot.hasParking,
       hasFoodDrinks: spot.hasFoodDrinks,
       maxGroupSize: spot.maxGroupSize,
       type: spot.type,
+      hours: spot.hours || defaultHours,
     },
   });
   redirect('/list');
@@ -50,7 +60,7 @@ export async function addSpot(spot: SpotInput) {
  * Edits an existing spot in the database.
  * @param spot The spot data to update
  */
-export async function editSpot(spot: Spot) {
+export async function editSpot(spot: Spot & { hours: Prisma.InputJsonValue }) {
   await prisma.spot.update({
     where: { id: spot.id },
     data: {
@@ -60,13 +70,13 @@ export async function editSpot(spot: Spot) {
       rating: spot.rating,
       numReviews: spot.numReviews,
       address: spot.address,
-      latitude: spot.latitude,
-      longitude: spot.longitude,
+      zipCode: spot.zipCode,
       hasOutlets: spot.hasOutlets,
       hasParking: spot.hasParking,
       hasFoodDrinks: spot.hasFoodDrinks,
       maxGroupSize: spot.maxGroupSize,
       type: spot.type,
+      hours: spot.hours,
     },
   });
   redirect('/list');
