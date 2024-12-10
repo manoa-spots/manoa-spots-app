@@ -59,6 +59,7 @@ const NavBar: React.FC = () => {
           {/* Menu Items */}
           <Nav className="me-auto justify-content-start">
             {currentUser && (
+            <>
               <Nav.Link
                 id={ComponentIDs.homeMenuItem}
                 active={pathname === '/home'}
@@ -66,22 +67,31 @@ const NavBar: React.FC = () => {
               >
                 home
               </Nav.Link>
+              <Nav.Link
+                id={ComponentIDs.addSpotMenuItem}
+                active={pathname === '/add'}
+                href="/add"
+              >
+                add spot
+              </Nav.Link>
+              <Nav.Link
+                id={ComponentIDs.homeMenuItem}
+                active={pathname === '/favorites'}
+                href="/favorites"
+                key="favorites"
+              >
+                favorites
+              </Nav.Link>
+              <Nav.Link
+                id={ComponentIDs.projectsMenuItem}
+                active={pathname === '/profile'}
+                href="/profile"
+                key="profile"
+              >
+                profile
+              </Nav.Link>
+            </>
             )}
-            <Nav.Link
-              id={ComponentIDs.addSpotMenuItem}
-              active={pathname === '/add'}
-              href="/add"
-            >
-              add spot
-            </Nav.Link>
-            <Nav.Link
-              id={ComponentIDs.projectsMenuItem}
-              active={pathname === '/profile'}
-              href="/profile"
-              key="profile"
-            >
-              profile
-            </Nav.Link>
           </Nav>
 
           {/* Dropdowns */}
