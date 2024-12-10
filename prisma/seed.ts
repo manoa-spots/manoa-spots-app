@@ -5,7 +5,6 @@ import * as config from '../config/settings.development.json';
 
 const prisma = new PrismaClient();
 
-// Define the users data structure
 const users = [
   {
     email: 'student1@hawaii.edu',
@@ -42,15 +41,14 @@ const users = [
   },
 ];
 
-async function main() {
-  console.log('Seeding the database');
+async function seedDefaultAccounts() {
+  console.log('Seeding default accounts...');
   const password = await hash('changeme', 10);
 
-  // Seed default accounts from config
-  await Promise.all(config.defaultAccounts.map(async (account) => {
+  const accountPromises = config.defaultAccounts.map(async (account) => {
     const role: Role = account.role === 'ADMIN' ? 'ADMIN' : 'USER';
     console.log(`  Creating user: ${account.email} with role: ${role}`);
-    await prisma.user.upsert({
+    return prisma.user.upsert({
       where: { email: account.email },
       update: {},
       create: {
@@ -59,102 +57,99 @@ async function main() {
         role,
       },
     });
-  }));
+  });
 
-  // Create spots from imported data
+  await Promise.all(accountPromises);
+}
+
+async function seedSpots() {
+  console.log('Cleaning existing spots and reviews...');
+  await prisma.review.deleteMany({});
+  await prisma.spot.deleteMany({});
+
   console.log('Creating spots...');
-  const createdSpots = await Promise.all(
-    spots.map((spot) => prisma.spot.upsert({
-      where: { name: spot.name },
-      update: {},
-      create: spot,
-    })),
-  );
-
-  async function seedSpots() {
+  const spotPromises = spots.map(async (spot) => {
     try {
-      console.log('Seeding spots...');
-      await Promise.all(
-        spots.map(async (spot) => {
-          await prisma.spot.upsert({
-            where: { name: spot.name },
-            update: {},
-            create: {
-              name: spot.name,
-              description: spot.description,
-              imageUrl: spot.imageUrl,
-              rating: spot.rating,
-              numReviews: spot.numReviews,
-              address: spot.address,
-              zipCode: spot.zipCode,
-              hours: JSON.stringify(spot.hours),
-              amenities: spot.amenities,
-              hasOutlets: spot.hasOutlets,
-              hasParking: spot.hasParking,
-              hasFoodDrinks: spot.hasFoodDrinks,
-              maxGroupSize: spot.maxGroupSize,
-              minGroupSize: spot.minGroupSize,
-              type: spot.type,
-            },
-          });
-        }),
-      );
-      console.log('Seeding completed.');
+      console.log(`  Creating spot: ${spot.name}`);
+      const createdSpot = await prisma.spot.create({
+        data: spot,
+      });
+      console.log(`    ✓ Created spot: ${spot.name}`);
+      return createdSpot;
     } catch (error) {
-      console.error('Error seeding spots:', error);
-    } finally {
-      await prisma.$disconnect();
+      console.error(`    ✗ Failed to create spot ${spot.name}:`, error);
+      throw error;
     }
-  }
+  });
 
-  seedSpots();
+  return Promise.all(spotPromises);
+}
 
-  // Create users and profiles
+async function seedUsersAndProfiles(createdSpots: any[]) {
   console.log('Creating users and profiles...');
-  await Promise.all(users.map(async (userData) => {
-    const hashedPassword = await hash(userData.password, 10);
-    const user = await prisma.user.upsert({
-      where: { email: userData.email },
-      update: {},
-      create: {
-        email: userData.email,
-        password: hashedPassword,
-        role: userData.role,
-      },
-    });
-
-    await prisma.profile.upsert({
-      where: { email: userData.email },
-      update: {},
-      create: {
-        email: userData.email,
-        firstName: userData.profile.firstName,
-        lastName: userData.profile.lastName,
-        bio: userData.profile.bio,
-        picture: userData.profile.picture,
-      },
-    });
-
-    // Create some sample reviews
-    if (createdSpots.length > 0) {
-      await prisma.review.create({
-        data: {
-          rating: 4,
-          comment: 'Great study spot!',
-          userId: user.id,
-          spotId: createdSpots[0].id,
+  const userPromises = users.map(async (userData) => {
+    try {
+      const hashedPassword = await hash(userData.password, 10);
+      const user = await prisma.user.upsert({
+        where: { email: userData.email },
+        update: {},
+        create: {
+          email: userData.email,
+          password: hashedPassword,
+          role: userData.role,
         },
       });
-    }
-  }));
 
-  console.log('Seeding completed');
+      await prisma.profile.upsert({
+        where: { email: userData.email },
+        update: {},
+        create: {
+          email: userData.email,
+          firstName: userData.profile.firstName,
+          lastName: userData.profile.lastName,
+          bio: userData.profile.bio,
+          picture: userData.profile.picture,
+        },
+      });
+
+      if (createdSpots.length > 0) {
+        return await prisma.review.create({
+          data: {
+            rating: 4,
+            comment: 'Great study spot!',
+            userId: user.id,
+            spotId: createdSpots[0].id,
+          },
+        });
+      }
+      return user;
+    } catch (error) {
+      console.error(`Failed to create user ${userData.email}:`, error);
+      throw error;
+    }
+  });
+
+  return Promise.all(userPromises);
+}
+
+async function main() {
+  try {
+    console.log('Starting database seeding...');
+    await seedDefaultAccounts();
+    const createdSpots = await seedSpots();
+    await seedUsersAndProfiles(createdSpots);
+    console.log('Seeding completed successfully');
+  } catch (error) {
+    console.error('Error during seeding:', error);
+    throw error;
+  }
 }
 
 main()
-  .then(() => prisma.$disconnect())
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
+  .catch((error) => {
+    console.error('Failed to seed database:', error);
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
