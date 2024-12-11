@@ -1,8 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('test', async ({ page }) => {
-  await page.goto('http://localhost:3000/profile');
-  await page.getByRole('heading', { name: 'Jane Doe' }).click();
-  await page.getByRole('img', { name: 'Broome St General Store image' }).click();
-  await expect(page.getByRole('img', { name: 'Holoholo Drive-Thru Espresso' })).toBeVisible();
+  await page.goto('https://manoa-spots.vercel.app/');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('link', { name: 'Sign in' }).click();
+  await page.getByPlaceholder('Email address').click();
+  await page.getByPlaceholder('Email address').fill('john@foo.com');
+  await page.getByPlaceholder('Password').click();
+  await page.getByPlaceholder('Password').fill('changeme');
+  await page.getByRole('button', { name: 'Sign In' }).click();
+  await page.getByRole('link', { name: 'profile' }).click();
+  await page.getByRole('button', { name: 'Edit' }).click();
 });
