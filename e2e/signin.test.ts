@@ -2,7 +2,7 @@
 import { test } from '@playwright/test';
 
 test('test', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
+  await page.goto('https://manoa-spots.vercel.app/');
   await page.getByRole('button', { name: 'Login' }).click();
   await page.getByRole('link', { name: 'Sign in' }).click();
   await page.getByPlaceholder('Email address').click();

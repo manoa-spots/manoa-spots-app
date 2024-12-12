@@ -1,26 +1,63 @@
+/* eslint-disable react/no-array-index-key */
+
 'use client';
 
-import { Container, Row, Col, Card, Image } from 'react-bootstrap';
+import { useState, ChangeEvent } from 'react';
+import { Container, Row, Col, Image, Button, Form } from 'react-bootstrap';
 
 const ProfilePage = () => {
-  // Mock data for the profile page
-  const user = {
+  // State variables for the profile information
+  const [user, setUser] = useState({
     name: 'Jane Doe',
     profilePic: '/images/profile.jpg', // Replace with actual image path
     interests: ['Cafés', 'Matcha', 'Boba', 'Libraries'],
     year: 'Senior',
     major: 'ICS',
     courses: ['ICS 314', 'ICS 311', 'ICS 212'],
-    favoriteSpots: [
-      {
-        name: 'Broome St General Store',
-        image: '/images/broome-store.jpg',
-      },
-      {
-        name: 'Holoholo Drive-Thru Espresso',
-        image: '/images/holoholo.jpg',
-      },
-    ],
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editUser, setEditUser] = useState({ ...user });
+
+  // Toggle between edit and view modes
+  const toggleEdit = () => {
+    if (isEditing) {
+      setUser(editUser); // Save changes
+    } else {
+      setEditUser(user); // Reset edits to the current state
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // Handle form changes (generalized to handle all form controls)
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditUser({ ...editUser, [name]: value });
+  };
+
+  // Handle changes to interests (text input)
+  const handleInterestsChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
+    const updatedInterests = [...editUser.interests];
+    updatedInterests[index] = e.target.value;
+    setEditUser({ ...editUser, interests: updatedInterests });
+  };
+
+  // Handle changes to courses (text input)
+  const handleCoursesChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
+    const updatedCourses = [...editUser.courses];
+    updatedCourses[index] = e.target.value;
+    setEditUser({ ...editUser, courses: updatedCourses });
+  };
+
+  // Handle profile picture change
+  const handleProfilePicChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditUser({ ...editUser, profilePic: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -29,23 +66,70 @@ const ProfilePage = () => {
       <Row className="align-items-center mb-4">
         <Col xs={12} md={4} className="text-center">
           <Image
-            src={user.profilePic}
-            style={{ width: '200px', objectFit: 'cover' }}
-            alt={`${user.name}'s profile picture`}
+            src={editUser.profilePic}
+            roundedCircle
+            alt={`${editUser.name}'s profile picture`}
+            style={{ width: '200px', height: '200px', objectFit: 'cover' }}
           />
+          {isEditing && (
+            <Form.Group className="mt-3">
+              <Form.Label>Change Profile Picture</Form.Label>
+              <Form.Control
+                type="file"
+                onChange={handleProfilePicChange}
+              />
+            </Form.Group>
+          )}
         </Col>
         <Col xs={12} md={8}>
-          <h1>{user.name}</h1>
-          <p>
-            <strong>Year:</strong>
-            {' '}
-            {user.year}
-          </p>
-          <p>
-            <strong>Major:</strong>
-            {' '}
-            {user.major}
-          </p>
+          {isEditing ? (
+            <>
+              <Form.Group className="mb-3">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  value={editUser.name}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Year</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="year"
+                  value={editUser.year}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Major</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="major"
+                  value={editUser.major}
+                  onChange={handleChange}
+                />
+              </Form.Group>
+            </>
+          ) : (
+            <>
+              <h1>{editUser.name}</h1>
+              <p>
+                <strong>Year:</strong>
+                {' '}
+                {editUser.year}
+              </p>
+              <p>
+                <strong>Major:</strong>
+                {' '}
+                {editUser.major}
+              </p>
+            </>
+          )}
+          <Button variant="primary" onClick={toggleEdit}>
+            {isEditing ? 'Save' : 'Edit'}
+          </Button>
         </Col>
       </Row>
 
@@ -53,11 +137,25 @@ const ProfilePage = () => {
       <Row className="mb-4">
         <Col>
           <h2>Interests</h2>
-          <ul>
-            {user.interests.map((interest) => (
-              <li key={interest}>{interest}</li> // Use the interest as the key
-            ))}
-          </ul>
+          {isEditing ? (
+            <ul>
+              {editUser.interests.map((interest, index) => (
+                <li key={index}>
+                  <Form.Control
+                    type="text"
+                    value={interest}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleInterestsChange(e, index)}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul>
+              {editUser.interests.map((interest, index) => (
+                <li key={index}>{interest}</li>
+              ))}
+            </ul>
+          )}
         </Col>
       </Row>
 
@@ -65,35 +163,25 @@ const ProfilePage = () => {
       <Row className="mb-4">
         <Col>
           <h2>Courses</h2>
-          <ul>
-            {user.courses.map((course) => (
-              <li key={course}>{course}</li>
-            ))}
-          </ul>
-        </Col>
-      </Row>
-
-      {/* Favorite Spots Section */}
-      <Row>
-        <Col>
-          <h2>Favorite Spots</h2>
-          <Row>
-            {user.favoriteSpots.map((spot) => (
-              <Col key={spot.name} xs={12} md={6} className="mb-4">
-                <Card>
-                  <Card.Img
-                    variant="top"
-                    src={spot.image}
-                    alt={`${spot.name} image`}
-                    style={{ height: '200px', objectFit: 'cover' }}
+          {isEditing ? (
+            <ul>
+              {editUser.courses.map((course, index) => (
+                <li key={index}>
+                  <Form.Control
+                    type="text"
+                    value={course}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => handleCoursesChange(e, index)}
                   />
-                  <Card.Body>
-                    <Card.Title>{spot.name}</Card.Title>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul>
+              {editUser.courses.map((course, index) => (
+                <li key={index}>{course}</li>
+              ))}
+            </ul>
+          )}
         </Col>
       </Row>
     </Container>
