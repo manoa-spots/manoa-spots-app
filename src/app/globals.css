@@ -254,3 +254,28 @@
   text-decoration: underline;
 }
 
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.amenities-badge {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.amenities-badge:hover {
+  transform: translateY(-2px);
+}
+
+.bg-light {
+  background-color: var(--primary-light) !important;
+}
+
+.text-primary-dark {
+  color: var(--primary-dark);
+}
+
+.text-secondary-green {
+  color: var(--secondary-green);
+}
