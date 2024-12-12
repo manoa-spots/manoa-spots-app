@@ -1,3 +1,6 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import Image from 'react-bootstrap/Image';
 import Badge from 'react-bootstrap/Badge';
 import {
@@ -21,12 +24,49 @@ interface SpotCardProps {
 }
 
 const SpotCard = ({ spot }: SpotCardProps) => {
-  // Calculate the number of full, half, and empty stars
+  const router = useRouter();
   const fullStars = Math.floor(spot.rating);
   const halfStars = spot.rating - fullStars >= 0.5 ? 1 : 0;
 
+  const handleClick = () => {
+    router.push(`/spots/${spot.id}`);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleClick();
+    }
+  };
+
+  // Pre-generate star elements
+  const starElements = [];
+  for (let i = 0; i < 5; i++) {
+    const uniqueKey = `${spot.id}-star-${i}-${fullStars}-${halfStars}`;
+    if (i < fullStars) {
+      starElements.push(
+        <StarFill key={`${uniqueKey}-full`} className="text-warning me-1" />,
+      );
+    } else if (i === fullStars && halfStars > 0) {
+      starElements.push(
+        <StarHalf key={`${uniqueKey}-half`} className="text-warning me-1" />,
+      );
+    } else {
+      starElements.push(
+        <Star key={`${uniqueKey}-empty`} className="text-warning me-1" />,
+      );
+    }
+  }
+
   return (
-    <div className="card h-100 shadow-sm hover-shadow transition-all">
+    <div
+      role="button"
+      tabIndex={0}
+      className="card h-100 shadow-sm hover-shadow transition-all"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      style={{ cursor: 'pointer' }}
+    >
       <Image
         src={spot.imageUrl}
         alt={spot.name}
@@ -36,20 +76,18 @@ const SpotCard = ({ spot }: SpotCardProps) => {
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <h5 className="card-title mb-0">{spot.name}</h5>
-          <Badge className="location-badge" bg="var(--secondary-green)" text="var(--primary-white)">{spot.type}</Badge>
+          <Badge
+            className="location-badge"
+            bg="var(--secondary-green)"
+            text="var(--primary-white)"
+          >
+            {spot.type}
+          </Badge>
         </div>
 
         {/* Rating */}
         <div className="mb-2 text-start">
-          {[...Array(5)].map((_, i) => {
-            if (i < fullStars) {
-              return <StarFill key={`${spot.id}-full-${spot.rating}-${Math.random()}`} className="text-warning me-1" />;
-            }
-            if (i === fullStars && halfStars > 0) {
-              return <StarHalf key={`${spot.id}-half-${spot.rating}`} className="text-warning me-1" />;
-            }
-            return <Star key={`${spot.id}-empty-${spot.rating}-${Math.random()}`} className="text-warning me-1" />;
-          })}
+          {starElements}
           <span className="fw-bold">{spot.rating.toFixed(1)}</span>
           <span className="text-muted ms-1">
             (
@@ -67,7 +105,7 @@ const SpotCard = ({ spot }: SpotCardProps) => {
           </p>
         )}
 
-        {/* Amenities - left aligned */}
+        {/* Amenities */}
         <div className="mb-3">
           <div className="d-flex flex-wrap gap-2">
             {spot.hasOutlets && (
@@ -112,7 +150,7 @@ const SpotCard = ({ spot }: SpotCardProps) => {
           </div>
         </div>
 
-        {/* Location - left aligned */}
+        {/* Location */}
         <div className="text-muted small d-flex align-items-center">
           <GeoAlt className="me-1" color="red" />
           {spot.address}
