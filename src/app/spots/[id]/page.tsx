@@ -122,22 +122,25 @@ export default function SpotPage() {
         <Col md={8}>
           <div className="d-flex justify-content-between align-items-start mb-3">
             <h1 className="mb-0 text-primary-dark">{spot.name}</h1>
-            <Badge 
-              className="location-badge" 
-              bg="var(--secondary-green)" 
+            <Badge
+              className="location-badge"
+              bg="var(--secondary-green)"
               text="var(--primary-white)"
             >
               {spot.type}
             </Badge>
           </div>
-          
+
           {/* Enhanced rating section */}
           <div className="d-flex align-items-center mb-3">
             <div className="d-flex align-items-center bg-light rounded-pill px-3 py-2">
               {starElements}
               <span className="fw-bold ms-2">{spot.rating.toFixed(1)}</span>
               <span className="text-muted ms-1">
-                ({spot.numReviews} reviews)
+                (
+                {spot.numReviews}
+                reviews
+                )
               </span>
             </div>
           </div>
@@ -159,8 +162,8 @@ export default function SpotPage() {
               src={spot.imageUrl}
               alt={spot.name}
               className="w-100 rounded shadow-sm"
-              style={{ 
-                maxHeight: '500px', 
+              style={{
+                maxHeight: '500px',
                 objectFit: 'cover',
                 border: '1px solid var(--primary-light)',
               }}
@@ -233,8 +236,8 @@ export default function SpotPage() {
               </h3>
               <div className="mb-4">
                 {(Object.entries(hours) as [keyof HoursType, string][]).map(([day, time]) => (
-                  <div 
-                    key={`hours-${day}`} 
+                  <div
+                    key={`hours-${day}`}
                     className="d-flex justify-content-between mb-2 py-2 border-bottom border-light"
                   >
                     <span className="text-capitalize fw-medium">{day}</span>
@@ -252,12 +255,12 @@ export default function SpotPage() {
                 <ExclamationCircle className="me-2" />
                 Additional Information
               </h3>
-              
+
               <div className="mb-3 p-2 bg-light rounded">
                 <strong>Type: </strong>
                 <span>{spot.type}</span>
               </div>
-              
+
               <div className="mb-3 p-2 bg-light rounded">
                 <strong>Zip Code: </strong>
                 <span>{spot.zipCode}</span>
@@ -268,7 +271,7 @@ export default function SpotPage() {
                   <strong className="d-block mb-2">Available Amenities:</strong>
                   <div className="bg-light p-3 rounded">
                     {spot.amenities.map((amenity: string) => (
-                      <div 
+                      <div
                         key={`amenity-${amenity}`}
                         className="d-flex align-items-center mb-2"
                       >
