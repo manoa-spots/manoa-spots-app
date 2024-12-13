@@ -1,37 +1,48 @@
-// src/components/SpotBusynessIndicator.tsx
+// src/components/BusyIndicator.tsx
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PersonFill } from 'react-bootstrap-icons';
 
 interface SpotBusynessIndicatorProps {
   spotId: string;
+  onUpdate?: () => void;
 }
 
-const SpotBusynessIndicator = ({ spotId }: SpotBusynessIndicatorProps) => {
+const defaultProps = {
+  onUpdate: () => undefined,
+};
+
+const SpotBusynessIndicator = ({
+  spotId,
+  onUpdate = defaultProps.onUpdate,
+}: SpotBusynessIndicatorProps) => {
   const [busynessData, setBusynessData] = useState({
     currentBusyness: 'unknown',
     activeCheckIns: 0,
   });
 
-  useEffect(() => {
-    const fetchBusynessData = async () => {
-      try {
-        const response = await fetch(`/api/spots/busyness?spotId=${spotId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setBusynessData(data);
+  const fetchBusynessData = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/spots/busyness?spotId=${spotId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setBusynessData(data);
+        if (onUpdate) {
+          onUpdate();
         }
-      } catch (error) {
-        console.error('Error fetching busyness:', error);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching busyness:', error);
+    }
+  }, [spotId, onUpdate]);
 
+  useEffect(() => {
     fetchBusynessData();
     const interval = setInterval(fetchBusynessData, 60000);
     return () => clearInterval(interval);
-  }, [spotId]);
+  }, [fetchBusynessData]);
 
   const getBusynessColor = () => {
     const colors = {
@@ -56,5 +67,7 @@ const SpotBusynessIndicator = ({ spotId }: SpotBusynessIndicatorProps) => {
     </div>
   );
 };
+
+SpotBusynessIndicator.defaultProps = defaultProps;
 
 export default SpotBusynessIndicator;

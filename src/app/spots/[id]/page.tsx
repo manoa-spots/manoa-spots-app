@@ -56,6 +56,11 @@ export default function SpotPage() {
     }
   }, [params.id]);
 
+  // Handle checkin completion
+  const handleCheckInComplete = React.useCallback(() => {
+    fetchBusynessData();
+  }, [fetchBusynessData]);
+
   // Add this useEffect to fetch initial busyness data
   useEffect(() => {
     fetchBusynessData();
@@ -176,18 +181,21 @@ export default function SpotPage() {
                 spotId={spot.id}
                 spotName={spot.name}
                 userId={currentUser.id}
-                onCheckInComplete={fetchBusynessData}
+                onCheckInComplete={handleCheckInComplete}
               />
               <div className="ms-3">
                 <span className="text-muted">
                   Current Activity:
                   {busynessData.activeCheckIns}
-                  people here
+                  + people here
                 </span>
               </div>
             </div>
             <div className="mt-2">
-              <SpotBusynessIndicator spotId={spot.id} />
+              <SpotBusynessIndicator
+                spotId={spot.id}
+                onUpdate={fetchBusynessData}
+              />
             </div>
           </div>
 

@@ -120,16 +120,10 @@ const CheckInButton = ({
         const checkIn = await response.json();
         setCurrentCheckIn(checkIn);
         setIsCheckedIn(true);
+        setShowModal(false);
 
-        // Update spot's busyness data
-        await fetch(`/api/spots/busyness?spotId=${spotId}`);
-
-        handleModalClose();
-
-        // Optional: Trigger friend activity refresh in parent component
-        if (onCheckInComplete) {
-          onCheckInComplete();
-        }
+        // Call the callback to update parent component
+        onCheckInComplete();
       } else {
         console.error('Failed to check in');
       }
@@ -161,6 +155,9 @@ const CheckInButton = ({
       if (response.ok) {
         setCurrentCheckIn(null);
         setIsCheckedIn(false);
+
+        // Call the callback after checkout too
+        onCheckInComplete();
       }
     } catch (error) {
       console.error('Error checking out:', error);
