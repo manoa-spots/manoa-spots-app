@@ -1,5 +1,3 @@
-// src/components/BusyIndicator.tsx
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,6 +8,11 @@ interface SpotBusynessIndicatorProps {
   onUpdate?: () => void;
 }
 
+interface BusynessData {
+  currentBusyness: string;
+  activeCheckIns: number;
+}
+
 const defaultProps = {
   onUpdate: () => undefined,
 };
@@ -18,33 +21,33 @@ const SpotBusynessIndicator = ({
   spotId,
   onUpdate = defaultProps.onUpdate,
 }: SpotBusynessIndicatorProps) => {
-  const [busynessData, setBusynessData] = useState({
+  const [busynessData, setBusynessData] = useState<BusynessData>({
     currentBusyness: 'unknown',
     activeCheckIns: 0,
   });
 
   const fetchBusynessData = useCallback(async () => {
     try {
+      console.log('Fetching busyness data for spot:', spotId);
       const response = await fetch(`/api/spots/busyness?spotId=${spotId}`);
 
-      if (response.ok) {
-        const errorText = await response.text();
-        console.error('Busyness API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText,
-        });
-        return;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Received busyness data:', data); // Add logging
-      setBusynessData(data);
-      if (onUpdate) {
+      console.log('Received busyness data:', data);
+
+      // Only update state if we have valid data
+      if (data && typeof data.currentBusyness === 'string' && typeof data.activeCheckIns === 'number') {
+        setBusynessData({
+          currentBusyness: data.currentBusyness,
+          activeCheckIns: data.activeCheckIns,
+        });
         onUpdate();
       }
     } catch (error) {
-      console.error('Error fetching busyness:', error);
+      console.error('Error fetching busyness:', error instanceof Error ? error.message : 'Unknown error');
     }
   }, [spotId, onUpdate]);
 
@@ -68,7 +71,9 @@ const SpotBusynessIndicator = ({
   return (
     <div className="d-flex align-items-center gap-2">
       <PersonFill className={getBusynessColor()} size={18} />
-      <span className="text-capitalize">{busynessData.currentBusyness}</span>
+      <span className="text-capitalize">
+        {busynessData.currentBusyness}
+      </span>
       <span className="text-muted small">
         (
         {busynessData.activeCheckIns}

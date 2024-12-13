@@ -4,16 +4,16 @@ import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const spotId = searchParams.get('spotId');
-
-  if (!spotId) {
-    return Response.json({ error: 'spotId is required' }, { status: 400 });
-  }
-
   try {
-    // Log the initial request
-    console.log('Fetching busyness for spot:', spotId);
+    const { searchParams } = new URL(request.url);
+    const spotId = searchParams.get('spotId');
+
+    if (!spotId) {
+      return Response.json(
+        { error: 'spotId is required' },
+        { status: 400 },
+      );
+    }
 
     // Get active check-ins for the spot
     const activeCheckIns = await prisma.checkIn.findMany({
@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
         busyness: true,
       },
     });
-
-    console.log('Found active check-ins:', activeCheckIns);
 
     let avgBusyness = 'quiet';
     if (activeCheckIns.length > 0) {
@@ -44,25 +42,35 @@ export async function GET(request: NextRequest) {
       );
       const avg = sum / activeCheckIns.length;
 
-      // Find the closest busyness level
       const busynessEntry = Object.entries(busynessLevels)
         .find(([, value]) => value === Math.round(avg));
       avgBusyness = busynessEntry?.[0] || 'quiet';
     }
 
-    // Log the response
-    const response = {
+    const responseData = {
       currentBusyness: avgBusyness,
       activeCheckIns: activeCheckIns.length,
     };
-    console.log('Sending response:', response);
 
-    return Response.json(response);
+    return new Response(
+      JSON.stringify(responseData),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
   } catch (error) {
     console.error('Error in busyness API:', error);
-    return Response.json(
-      { error: 'Failed to fetch busyness data' },
-      { status: 500 },
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch busyness data' }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
     );
   }
 }
