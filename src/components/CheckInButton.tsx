@@ -101,34 +101,39 @@ const CheckInButton = ({
     setIsLoading(true);
     try {
       const finalDuration = showCustomDuration ? customDuration : checkInData.duration;
+      const requestData = {
+        userId,
+        spotId,
+        duration: parseInt(finalDuration, 10) || 60, // Default to 60 if parsing fails
+        busyness: checkInData.busyness,
+        notes: checkInData.notes || '',
+      };
+
+      console.log('Sending check-in data:', requestData);
 
       const response = await fetch('/api/checkins', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId,
-          spotId,
-          duration: parseInt(finalDuration, 10),
-          busyness: checkInData.busyness,
-          notes: checkInData.notes,
-        }),
+        body: JSON.stringify(requestData),
       });
 
-      if (response.ok) {
-        const checkIn = await response.json();
-        setCurrentCheckIn(checkIn);
-        setIsCheckedIn(true);
-        setShowModal(false);
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
+      }
 
-        // Call the callback to update parent component
+      const checkIn = await response.json();
+      setCurrentCheckIn(checkIn);
+      setIsCheckedIn(true);
+      handleModalClose();
+
+      if (onCheckInComplete) {
         onCheckInComplete();
-      } else {
-        console.error('Failed to check in');
       }
     } catch (error) {
-      console.error('Error checking in:', error);
+      console.error('Error checking in:', error instanceof Error ? error.message : String(error));
     } finally {
       setIsLoading(false);
     }
