@@ -1,8 +1,9 @@
 // src/app/api/spots/busyness/route.ts
+/* eslint-disable import/prefer-default-export */
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-const getBusyness = async (request: NextRequest) => {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const spotId = searchParams.get('spotId');
 
@@ -37,8 +38,10 @@ const getBusyness = async (request: NextRequest) => {
         full: 4,
       };
 
-      const sum = activeCheckIns.reduce((acc, curr) => acc
-      + busynessLevels[curr.busyness as keyof typeof busynessLevels], 0);
+      const sum = activeCheckIns.reduce(
+        (acc, curr) => acc + busynessLevels[curr.busyness as keyof typeof busynessLevels],
+        0,
+      );
       const avg = sum / activeCheckIns.length;
 
       // Find the closest busyness level
@@ -62,6 +65,4 @@ const getBusyness = async (request: NextRequest) => {
       { status: 500 },
     );
   }
-};
-
-export default getBusyness;
+}

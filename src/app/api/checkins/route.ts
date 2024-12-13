@@ -1,13 +1,13 @@
+// src/app/api/checkins/route.ts
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-// src/app/api/checkins/route.ts
-const POST = async (request: NextRequest) => {
+// Remove 'default' and use named export
+export async function POST(request: NextRequest) {
   try {
     const { userId, spotId, duration, busyness, notes } = await request.json();
     console.log('Creating check-in with data:', { userId, spotId, duration, busyness });
 
-    // First end any active check-ins
     const endedCheckins = await prisma.checkIn.updateMany({
       where: {
         userId,
@@ -21,7 +21,6 @@ const POST = async (request: NextRequest) => {
 
     console.log('Ended previous check-ins:', endedCheckins);
 
-    // Create new check-in
     const newCheckIn = await prisma.checkIn.create({
       data: {
         userId,
@@ -42,6 +41,28 @@ const POST = async (request: NextRequest) => {
       { status: 500 },
     );
   }
-};
+}
 
-export default POST;
+export async function PUT(request: NextRequest) {
+  try {
+    const { checkInId } = await request.json();
+
+    const updatedCheckIn = await prisma.checkIn.update({
+      where: {
+        id: checkInId,
+      },
+      data: {
+        status: 'completed',
+        endedAt: new Date(),
+      },
+    });
+
+    return Response.json(updatedCheckIn);
+  } catch (error) {
+    console.error('Error in check-out API:', error);
+    return Response.json(
+      { error: 'Failed to update check-in' },
+      { status: 500 },
+    );
+  }
+}
