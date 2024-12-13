@@ -1,14 +1,33 @@
 // src/app/api/checkins/route.ts
+/* eslint-disable import/prefer-default-export */
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-// Remove 'default' and use named export
+interface CheckInRequest {
+  userId: string;
+  spotId: string;
+  duration: number;
+  busyness: string;
+  notes?: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { userId, spotId, duration, busyness, notes } = await request.json();
-    console.log('Creating check-in with data:', { userId, spotId, duration, busyness });
+    const body = await request.json() as CheckInRequest;
+    console.log('Received check-in request:', body);
 
-    const endedCheckins = await prisma.checkIn.updateMany({
+    // Validate request data
+    const { userId, spotId, duration, busyness, notes } = body;
+
+    if (!userId || !spotId || !busyness) {
+      return Response.json(
+        { error: 'Missing required fields' },
+        { status: 400 },
+      );
+    }
+
+    // End any existing check-ins
+    await prisma.checkIn.updateMany({
       where: {
         userId,
         status: 'active',
@@ -19,25 +38,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('Ended previous check-ins:', endedCheckins);
-
-    const newCheckIn = await prisma.checkIn.create({
+    // Create new check-in
+    const checkIn = await prisma.checkIn.create({
       data: {
         userId,
         spotId,
         status: 'active',
-        duration: parseInt(duration.toString(), 10),
+        duration: Number(duration) || 60,
         busyness,
         notes: notes || '',
       },
     });
 
-    console.log('Created new check-in:', newCheckIn);
-    return Response.json(newCheckIn);
+    console.log('Created check-in:', checkIn);
+
+    return Response.json(checkIn);
   } catch (error) {
-    console.error('Error in check-in API:', error);
+    console.error('Server error in check-in:', error);
     return Response.json(
-      { error: 'Failed to create check-in' },
+      {
+        error: 'Failed to create check-in',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
@@ -47,7 +69,14 @@ export async function PUT(request: NextRequest) {
   try {
     const { checkInId } = await request.json();
 
-    const updatedCheckIn = await prisma.checkIn.update({
+    if (!checkInId) {
+      return Response.json(
+        { error: 'Missing checkInId' },
+        { status: 400 },
+      );
+    }
+
+    const checkIn = await prisma.checkIn.update({
       where: {
         id: checkInId,
       },
@@ -57,11 +86,14 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    return Response.json(updatedCheckIn);
+    return Response.json(checkIn);
   } catch (error) {
-    console.error('Error in check-out API:', error);
+    console.error('Error in check-out:', error);
     return Response.json(
-      { error: 'Failed to update check-in' },
+      {
+        error: 'Failed to update check-in',
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }
