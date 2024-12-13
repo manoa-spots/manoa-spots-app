@@ -27,15 +27,22 @@ const SpotBusynessIndicator = ({
     console.log('Fetching busyness data for spot:', spotId); // Add logging
     try {
       const response = await fetch(`/api/spots/busyness?spotId=${spotId}`);
+
       if (response.ok) {
-        const data = await response.json();
-        console.log('Received busyness data:', data); // Add logging
-        setBusynessData(data);
-        if (onUpdate) {
-          onUpdate();
-        }
-      } else {
-        console.error('Bad response from busyness API:', await response.text());
+        const errorText = await response.text();
+        console.error('Busyness API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+        });
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Received busyness data:', data); // Add logging
+      setBusynessData(data);
+      if (onUpdate) {
+        onUpdate();
       }
     } catch (error) {
       console.error('Error fetching busyness:', error);
