@@ -59,6 +59,7 @@ model Spot {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   checkIns CheckIn[]
+  currentBusyness String?   // Updated in real-time based on check-ins
 }
 
 model Review {
@@ -109,4 +110,7 @@ model CheckIn {
   endedAt   DateTime?
   user      User     @relation(fields: [userId], references: [id])
   spot      Spot     @relation(fields: [spotId], references: [id])
+
+  @@index([spotId])
+  @@index([userId])
 }

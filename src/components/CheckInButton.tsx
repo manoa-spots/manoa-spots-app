@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Button, Modal, Form } from 'react-bootstrap';
 import { MapPin } from 'lucide-react';
@@ -6,6 +8,7 @@ interface CheckInButtonProps {
   spotId: string;
   spotName: string;
   userId: string;
+  onCheckInComplete?: () => void;
 }
 
 interface CheckInData {
@@ -31,7 +34,16 @@ const BUSYNESS_OPTIONS = [
   { value: 'full', label: 'Full' },
 ];
 
-const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
+const defaultProps = {
+  onCheckInComplete: () => undefined,
+};
+
+const CheckInButton = ({
+  spotId,
+  spotName,
+  userId,
+  onCheckInComplete = defaultProps.onCheckInComplete,
+}: CheckInButtonProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +96,7 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
     return isCheckedIn ? 'Check Out' : 'Check In';
   };
 
+  // In your CheckInButton component
   const handleCheckIn = async () => {
     setIsLoading(true);
     try {
@@ -107,7 +120,16 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
         const checkIn = await response.json();
         setCurrentCheckIn(checkIn);
         setIsCheckedIn(true);
+
+        // Update spot's busyness data
+        await fetch(`/api/spots/busyness?spotId=${spotId}`);
+
         handleModalClose();
+
+        // Optional: Trigger friend activity refresh in parent component
+        if (onCheckInComplete) {
+          onCheckInComplete();
+        }
       } else {
         console.error('Failed to check in');
       }
@@ -235,5 +257,7 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
     </>
   );
 };
+
+CheckInButton.defaultProps = defaultProps;
 
 export default CheckInButton;

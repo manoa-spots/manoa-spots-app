@@ -20,6 +20,7 @@ import {
 import type { Spot } from '@prisma/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import CheckInButton from '@/components/CheckInButton';
+import SpotBusynessIndicator from '@/components/BusyIndicator';
 
 type HoursType = {
   [key: string]: string;
@@ -152,8 +153,11 @@ export default function SpotPage() {
             <CheckInButton
               spotId={spot.id}
               spotName={spot.name}
-              userId={currentUser.id} // Get this from your auth system
+              userId={currentUser.id}
             />
+            <div className="mt-3">
+              <SpotBusynessIndicator spotId={spot.id} />
+            </div>
           </div>
 
           {/* Styled address */}
