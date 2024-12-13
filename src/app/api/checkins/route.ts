@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
 export const POST = async (request: NextRequest) => {
-  const { userId, spotId } = await request.json();
+  const { userId, spotId, duration, busyness, notes } = await request.json();
 
   try {
     // End any existing check-ins
@@ -23,6 +23,9 @@ export const POST = async (request: NextRequest) => {
         userId,
         spotId,
         status: 'active',
+        duration,
+        busyness,
+        notes: notes || '',
       },
     });
 

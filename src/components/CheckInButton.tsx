@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, Modal } from 'react-bootstrap';
-import { MapPin, Clock } from 'lucide-react';
+import { Button, Modal, Form } from 'react-bootstrap';
+import { MapPin } from 'lucide-react';
 
 interface CheckInButtonProps {
   spotId: string;
@@ -8,23 +8,87 @@ interface CheckInButtonProps {
   userId: string;
 }
 
-interface CheckIn {
-  id: string;
-  userId: string;
-  spotId: string;
-  status: string;
-  createdAt: string;
+interface CheckInData {
+  duration: string;
+  busyness: string;
+  notes?: string;
 }
+
+const DURATION_OPTIONS = [
+  { value: '30', label: '30 minutes' },
+  { value: '60', label: '1 hour' },
+  { value: '120', label: '2 hours' },
+  { value: '180', label: '3 hours' },
+  { value: '240', label: '4 hours' },
+  { value: 'custom', label: 'Custom' },
+];
+
+const BUSYNESS_OPTIONS = [
+  { value: 'empty', label: 'Empty' },
+  { value: 'quiet', label: 'Quiet' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'busy', label: 'Busy' },
+  { value: 'full', label: 'Full' },
+];
 
 const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentCheckIn, setCurrentCheckIn] = useState<CheckIn | null>(null);
+  const [currentCheckIn, setCurrentCheckIn] = useState<any>(null);
+  const [checkInData, setCheckInData] = useState<CheckInData>({
+    duration: '60',
+    busyness: 'moderate',
+    notes: '',
+  });
+  const [customDuration, setCustomDuration] = useState('');
+  const [showCustomDuration, setShowCustomDuration] = useState(false);
+
+  const handleModalOpen = () => {
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setCheckInData({
+      duration: '60',
+      busyness: 'moderate',
+      notes: '',
+    });
+    setCustomDuration('');
+    setShowCustomDuration(false);
+  };
+
+  const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setShowCustomDuration(value === 'custom');
+    setCheckInData({
+      ...checkInData,
+      duration: value,
+    });
+  };
+
+  const handleCustomDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setCustomDuration(value);
+    setCheckInData({
+      ...checkInData,
+      duration: value,
+    });
+  };
+
+  const getButtonText = () => {
+    if (isLoading) {
+      return 'Processing...';
+    }
+    return isCheckedIn ? 'Check Out' : 'Check In';
+  };
 
   const handleCheckIn = async () => {
     setIsLoading(true);
     try {
+      const finalDuration = showCustomDuration ? customDuration : checkInData.duration;
+
       const response = await fetch('/api/checkins', {
         method: 'POST',
         headers: {
@@ -33,6 +97,9 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
         body: JSON.stringify({
           userId,
           spotId,
+          duration: parseInt(finalDuration, 10),
+          busyness: checkInData.busyness,
+          notes: checkInData.notes,
         }),
       });
 
@@ -40,7 +107,7 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
         const checkIn = await response.json();
         setCurrentCheckIn(checkIn);
         setIsCheckedIn(true);
-        setShowModal(true);
+        handleModalClose();
       } else {
         console.error('Failed to check in');
       }
@@ -72,7 +139,6 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
       if (response.ok) {
         setCurrentCheckIn(null);
         setIsCheckedIn(false);
-        setShowModal(false);
       }
     } catch (error) {
       console.error('Error checking out:', error);
@@ -81,18 +147,11 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
     }
   };
 
-  const getButtonText = () => {
-    if (isLoading) {
-      return 'Processing...';
-    }
-    return isCheckedIn ? 'Check Out' : 'Check In';
-  };
-
   return (
     <>
       <Button
         variant={isCheckedIn ? 'danger' : 'primary'}
-        onClick={isCheckedIn ? handleCheckOut : handleCheckIn}
+        onClick={isCheckedIn ? handleCheckOut : handleModalOpen}
         disabled={isLoading}
         className="d-flex align-items-center gap-2"
       >
@@ -100,34 +159,76 @@ const CheckInButton = ({ spotId, spotName, userId }: CheckInButtonProps) => {
         {getButtonText()}
       </Button>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal show={showModal} onHide={handleModalClose} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Checked In!</Modal.Title>
+          <Modal.Title>
+            {'Check In to '}
+            {spotName}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <div className="text-center">
-            <div className="mb-3">
-              <MapPin size={40} className="text-primary" />
-            </div>
-            <h4>
-              You&apos;re checked in at
-              {spotName}
-            </h4>
-            <p className="text-muted">
-              <Clock size={16} className="me-1" />
-              {new Date().toLocaleTimeString()}
-            </p>
-            <p className="mt-3">
-              Don&apos;t forget to check out when you leave!
-            </p>
-          </div>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>How long do you plan to stay?</Form.Label>
+              <Form.Select
+                value={checkInData.duration}
+                onChange={handleDurationChange}
+                className="mb-2"
+              >
+                {DURATION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Form.Select>
+              {showCustomDuration && (
+                <Form.Control
+                  type="number"
+                  placeholder="Enter minutes"
+                  value={customDuration}
+                  onChange={handleCustomDurationChange}
+                  min="1"
+                  max="480"
+                />
+              )}
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>How busy is it right now?</Form.Label>
+              <Form.Select
+                value={checkInData.busyness}
+                onChange={(e) => setCheckInData({ ...checkInData, busyness: e.target.value })}
+              >
+                {BUSYNESS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Notes (optional)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                placeholder="Add any additional notes (e.g., 'Good seating near outlets')"
+                value={checkInData.notes}
+                onChange={(e) => setCheckInData({ ...checkInData, notes: e.target.value })}
+              />
+            </Form.Group>
+          </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Close
+          <Button variant="secondary" onClick={handleModalClose}>
+            Cancel
           </Button>
-          <Button variant="danger" onClick={handleCheckOut}>
-            Check Out
+          <Button
+            variant="primary"
+            onClick={handleCheckIn}
+            disabled={isLoading || (showCustomDuration && !customDuration)}
+          >
+            Check In
           </Button>
         </Modal.Footer>
       </Modal>

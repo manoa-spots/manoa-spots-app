@@ -99,14 +99,14 @@ model Friendship {
 
 model CheckIn {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  spot      Spot     @relation(fields: [spotId], references: [id])
   spotId    String
-  status    String   @default("active") // "active" or "completed"
+  status    String   @default("active")
+  duration  Int      // in minutes
+  busyness  String
+  notes     String?
   createdAt DateTime @default(now())
   endedAt   DateTime?
-
-  @@index([userId])
-  @@index([spotId])
+  user      User     @relation(fields: [userId], references: [id])
+  spot      Spot     @relation(fields: [spotId], references: [id])
 }
