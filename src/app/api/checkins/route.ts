@@ -5,6 +5,7 @@ export const POST = async (request: NextRequest) => {
   const { userId, spotId, duration, busyness, notes } = await request.json();
 
   try {
+    console.log('Creating check-in:', { userId, spotId, duration, busyness }); // Add logging
     // End any existing check-ins
     await prisma.checkIn.updateMany({
       where: {
@@ -28,6 +29,8 @@ export const POST = async (request: NextRequest) => {
         notes: notes || '',
       },
     });
+
+    console.log('Check-in created:', checkIn); // Add logging
 
     return Response.json(checkIn);
   } catch (error) {

@@ -18,6 +18,8 @@ export const GET = async (request: NextRequest) => {
       },
     });
 
+    console.log('Active check-ins found:', activeCheckIns); // Add logging
+
     // Calculate average busyness
     const busynessLevels = {
       empty: 0,
@@ -49,11 +51,14 @@ export const GET = async (request: NextRequest) => {
       },
     });
 
+    console.log('Calculated busyness:', { avgBusyness, activeCheckIns: activeCheckIns.length }); // Add logging
+
     return Response.json({
       currentBusyness: avgBusyness,
       activeCheckIns: activeCheckIns.length,
     });
   } catch (error) {
+    console.error('Error fetching busyness:', error);
     return Response.json(
       { message: 'Error fetching busyness data' },
       { status: 500 },
