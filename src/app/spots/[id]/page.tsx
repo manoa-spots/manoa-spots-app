@@ -19,6 +19,7 @@ import {
 } from 'react-bootstrap-icons';
 import type { Spot } from '@prisma/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import CheckInButton from '@/components/CheckInButton';
 
 type HoursType = {
   [key: string]: string;
@@ -34,6 +35,7 @@ type HoursType = {
 export default function SpotPage() {
   const params = useParams();
   const [spot, setSpot] = React.useState<Spot | null>(null);
+  const currentUser = { id: 'exampleUserId' }; // Replace with actual user data from your auth system
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -143,6 +145,15 @@ export default function SpotPage() {
                 )
               </span>
             </div>
+          </div>
+
+          {/* Check-in button */}
+          <div className="mb-4">
+            <CheckInButton
+              spotId={spot.id}
+              spotName={spot.name}
+              userId={currentUser.id} // Get this from your auth system
+            />
           </div>
 
           {/* Styled address */}

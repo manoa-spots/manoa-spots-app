@@ -5,6 +5,7 @@ export const POST = async (request: NextRequest) => {
   const { userId, spotId } = await request.json();
 
   try {
+    // End any existing check-ins
     await prisma.checkIn.updateMany({
       where: {
         userId,
@@ -16,6 +17,7 @@ export const POST = async (request: NextRequest) => {
       },
     });
 
+    // Create new check-in
     const checkIn = await prisma.checkIn.create({
       data: {
         userId,
@@ -26,7 +28,6 @@ export const POST = async (request: NextRequest) => {
 
     return Response.json(checkIn);
   } catch (error) {
-    console.error('Error creating check-in:', error);
     return Response.json(
       { message: 'Error creating check-in' },
       { status: 500 },
@@ -39,7 +40,9 @@ export const PUT = async (request: NextRequest) => {
 
   try {
     const checkIn = await prisma.checkIn.update({
-      where: { id: checkInId },
+      where: {
+        id: checkInId,
+      },
       data: {
         status: 'completed',
         endedAt: new Date(),
@@ -48,7 +51,6 @@ export const PUT = async (request: NextRequest) => {
 
     return Response.json(checkIn);
   } catch (error) {
-    console.error('Error ending check-in:', error);
     return Response.json(
       { message: 'Error ending check-in' },
       { status: 500 },
