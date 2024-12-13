@@ -18,8 +18,11 @@ model User {
   password String
   role     Role     @default(USER)
   reviews  Review[]
+  sentFriendships     Friendship[] @relation("SentFriendships")
+  receivedFriendships Friendship[] @relation("ReceivedFriendships")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  checkIns CheckIn[]
 }
 
 model Profile {
@@ -29,6 +32,8 @@ model Profile {
   lastName  String
   bio       String
   picture   String
+  interests String[]  // Add this line
+  courses   String[]  // Add this line
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -53,6 +58,7 @@ model Spot {
   reviews       Review[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  checkIns CheckIn[]
 }
 
 model Review {
@@ -74,4 +80,33 @@ model Stuff {
   id        Int      @id @default(autoincrement())
   name      String
   createdAt DateTime @default(now())
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  status    String   @default("pending") // "pending" or "accepted"
+  sender    User     @relation("SentFriendships", fields: [senderId], references: [id])
+  senderId  String
+  receiver  User     @relation("ReceivedFriendships", fields: [receiverId], references: [id])
+  receiverId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model CheckIn {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  spot      Spot     @relation(fields: [spotId], references: [id])
+  spotId    String
+  status    String   @default("active") // "active" or "completed"
+  createdAt DateTime @default(now())
+  endedAt   DateTime?
+
+  @@index([userId])
+  @@index([spotId])
 }
