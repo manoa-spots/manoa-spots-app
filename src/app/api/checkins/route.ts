@@ -1,12 +1,14 @@
 import { prisma } from '@/lib/prisma';
 import { NextRequest } from 'next/server';
 
-export const POST = async (request: NextRequest) => {
-  const { userId, spotId, duration, busyness, notes } = await request.json();
-
+// src/app/api/checkins/route.ts
+const POST = async (request: NextRequest) => {
   try {
-    // End any existing check-ins
-    await prisma.checkIn.updateMany({
+    const { userId, spotId, duration, busyness, notes } = await request.json();
+    console.log('Creating check-in with data:', { userId, spotId, duration, busyness });
+
+    // First end any active check-ins
+    const endedCheckins = await prisma.checkIn.updateMany({
       where: {
         userId,
         status: 'active',
@@ -17,46 +19,29 @@ export const POST = async (request: NextRequest) => {
       },
     });
 
+    console.log('Ended previous check-ins:', endedCheckins);
+
     // Create new check-in
-    const checkIn = await prisma.checkIn.create({
+    const newCheckIn = await prisma.checkIn.create({
       data: {
         userId,
         spotId,
         status: 'active',
-        duration,
+        duration: parseInt(duration.toString(), 10),
         busyness,
         notes: notes || '',
       },
     });
 
-    return Response.json(checkIn);
+    console.log('Created new check-in:', newCheckIn);
+    return Response.json(newCheckIn);
   } catch (error) {
+    console.error('Error in check-in API:', error);
     return Response.json(
-      { message: 'Error creating check-in' },
+      { error: 'Failed to create check-in' },
       { status: 500 },
     );
   }
 };
 
-export const PUT = async (request: NextRequest) => {
-  const { checkInId } = await request.json();
-
-  try {
-    const checkIn = await prisma.checkIn.update({
-      where: {
-        id: checkInId,
-      },
-      data: {
-        status: 'completed',
-        endedAt: new Date(),
-      },
-    });
-
-    return Response.json(checkIn);
-  } catch (error) {
-    return Response.json(
-      { message: 'Error ending check-in' },
-      { status: 500 },
-    );
-  }
-};
+export default POST;
