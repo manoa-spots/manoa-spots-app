@@ -6,6 +6,7 @@ import { Container, Row, Col } from 'react-bootstrap';
 import SpotCard from '@/components/SpotCard';
 import FilterForm from '@/components/FilterForm';
 import type { Spot } from '@prisma/client';
+import { useSession } from 'next-auth/react';
 
 interface Filters {
   hasOutlets: boolean;
@@ -16,6 +17,8 @@ interface Filters {
 }
 
 const SearchContent: React.FC = () => {
+  const { data: session } = useSession(); // Fetch session data
+  const currentUserId = session?.user?.id || ''; // Extract userId from session
   const searchParams = useSearchParams();
   const query = searchParams.get('q')?.trim().toLowerCase() || '';
   const [spots, setSpots] = useState<Spot[]>([]);
@@ -80,7 +83,7 @@ const SearchContent: React.FC = () => {
             {spots.length > 0 ? (
               spots.map((spot) => (
                 <Col md={4} key={spot.id} className="mb-4">
-                  <SpotCard spot={spot} />
+                  <SpotCard spot={spot} userId={currentUserId} />
                 </Col>
               ))
             ) : (

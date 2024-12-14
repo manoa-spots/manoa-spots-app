@@ -20,6 +20,8 @@ model User {
   reviews  Review[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  favorites   Favorite[]  // Relation field to Favorite model
+
 }
 
 model Profile {
@@ -53,6 +55,8 @@ model Spot {
   reviews       Review[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  favorites   Favorite[]  // Relation field to Favorite model
+
 }
 
 model Review {
@@ -73,5 +77,14 @@ model Review {
 model Stuff {
   id        Int      @id @default(autoincrement())
   name      String
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  spotId    String
+  user      User     @relation(fields: [userId], references: [id])
+  spot      Spot     @relation(fields: [spotId], references: [id])
   createdAt DateTime @default(now())
 }

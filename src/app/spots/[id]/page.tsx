@@ -16,9 +16,12 @@ import {
   GeoAlt,
   Clock,
   ExclamationCircle,
+  Heart,
+  HeartFill,
 } from 'react-bootstrap-icons';
 import type { Spot } from '@prisma/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useSession } from 'next-auth/react';
 
 type HoursType = {
   [key: string]: string;
@@ -33,9 +36,33 @@ type HoursType = {
 
 export default function SpotPage() {
   const params = useParams();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id || '';
   const [spot, setSpot] = React.useState<Spot | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = React.useState(false);
+
+  const toggleFavorite = async () => {
+    const endpoint = isFavorited ? '/api/favorites/remove' : '/api/favorites/add';
+    const method = isFavorited ? 'DELETE' : 'POST';
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUserId, spotId: spot?.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle favorite');
+      }
+
+      setIsFavorited(!isFavorited);
+    } catch (toggleError) {
+      console.error('Error toggling favorite:', toggleError);
+    }
+  };
 
   React.useEffect(() => {
     const fetchSpot = async () => {
@@ -46,17 +73,25 @@ export default function SpotPage() {
         }
         const data = await response.json();
         setSpot(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+
+        const favoriteResponse = await fetch(
+          `/api/favorites?userId=${currentUserId}`,
+        );
+        if (favoriteResponse.ok) {
+          const favorites = await favoriteResponse.json();
+          setIsFavorited(favorites.some((fav: any) => fav.spotId === data.id));
+        }
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
     };
 
-    if (params.id) {
+    if (params.id && currentUserId) {
       fetchSpot();
     }
-  }, [params.id]);
+  }, [params.id, currentUserId]);
 
   if (loading) {
     return (
@@ -117,21 +152,37 @@ export default function SpotPage() {
 
   return (
     <Container className="py-5">
-      {/* Header Section with enhanced styling */}
       <Row className="mb-4">
         <Col md={8}>
           <div className="d-flex justify-content-between align-items-start mb-3">
             <h1 className="mb-0 text-primary-dark">{spot.name}</h1>
-            <Badge
-              className="location-badge"
-              bg="var(--secondary-green)"
-              text="var(--primary-white)"
-            >
-              {spot.type}
-            </Badge>
+            <div>
+              <Badge
+                className="location-badge me-3"
+                bg="var(--secondary-green)"
+                text="var(--primary-white)"
+              >
+                {spot.type}
+              </Badge>
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm"
+                onClick={toggleFavorite}
+                aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                }}
+              >
+                {isFavorited ? (
+                  <HeartFill color="red" size={20} />
+                ) : (
+                  <Heart size={20} />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Enhanced rating section */}
           <div className="d-flex align-items-center mb-3">
             <div className="d-flex align-items-center bg-light rounded-pill px-3 py-2">
               {starElements}
@@ -139,150 +190,15 @@ export default function SpotPage() {
               <span className="text-muted ms-1">
                 (
                 {spot.numReviews}
-                reviews
-                )
+                {' '}
+                reviews)
               </span>
             </div>
           </div>
 
-          {/* Styled address */}
           <div className="d-flex align-items-center text-muted mb-3 bg-light rounded-pill px-3 py-2">
             <GeoAlt className="me-2" color="var(--secondary-green)" />
             {spot.address}
-          </div>
-        </Col>
-      </Row>
-
-      <Row>
-        {/* Main Content */}
-        <Col md={8}>
-          {/* Image with enhanced styling */}
-          <div className="mb-4 position-relative">
-            <Image
-              src={spot.imageUrl}
-              alt={spot.name}
-              className="w-100 rounded shadow-sm"
-              style={{
-                maxHeight: '500px',
-                objectFit: 'cover',
-                border: '1px solid var(--primary-light)',
-              }}
-            />
-          </div>
-
-          {/* About Section */}
-          <section className="mb-4 p-4 bg-light rounded shadow-sm">
-            <h3 className="h4 mb-3 d-flex align-items-center">
-              <ExclamationCircle className="me-2 text-primary-dark" />
-              About this spot
-            </h3>
-            <p className="text-muted mb-0">{spot.description}</p>
-          </section>
-
-          {/* Amenities Section */}
-          <section className="mb-4 p-4 bg-light rounded shadow-sm">
-            <h3 className="h4 mb-3">Amenities</h3>
-            <div className="d-flex flex-wrap gap-3">
-              {spot.hasOutlets && (
-                <Badge
-                  className="amenities-badge d-flex align-items-center"
-                  bg="var(--primary-light)"
-                  text="var(--primary-dark)"
-                >
-                  <Plug className="me-2" />
-                  Power outlets available
-                </Badge>
-              )}
-              {spot.hasParking && (
-                <Badge
-                  className="amenities-badge d-flex align-items-center"
-                  bg="var(--primary-light)"
-                  text="var(--primary-dark)"
-                >
-                  <CarFront className="me-2" />
-                  {spot.hasParking}
-                </Badge>
-              )}
-              {spot.hasFoodDrinks && (
-                <Badge
-                  className="amenities-badge d-flex align-items-center"
-                  bg="var(--primary-light)"
-                  text="var(--primary-dark)"
-                >
-                  <Cup className="me-2" />
-                  Food/Drinks Allowed
-                </Badge>
-              )}
-              <Badge
-                className="amenities-badge d-flex align-items-center"
-                bg="var(--primary-light)"
-                text="var(--primary-dark)"
-              >
-                <People className="me-2" />
-                {`Up to ${spot.maxGroupSize} people`}
-              </Badge>
-            </div>
-          </section>
-        </Col>
-
-        {/* Right Sidebar */}
-        <Col md={4}>
-          {/* Hours Card */}
-          <div className="card shadow-sm mb-4 border-0">
-            <div className="card-body p-4">
-              <h3 className="h5 mb-3 d-flex align-items-center text-primary-dark">
-                <Clock className="me-2" />
-                Hours of Operation
-              </h3>
-              <div className="mb-4">
-                {(Object.entries(hours) as [keyof HoursType, string][]).map(([day, time]) => (
-                  <div
-                    key={`hours-${day}`}
-                    className="d-flex justify-content-between mb-2 py-2 border-bottom border-light"
-                  >
-                    <span className="text-capitalize fw-medium">{day}</span>
-                    <span className="text-muted">{time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Info Card */}
-          <div className="card shadow-sm border-0">
-            <div className="card-body p-4">
-              <h3 className="h5 mb-3 d-flex align-items-center text-primary-dark">
-                <ExclamationCircle className="me-2" />
-                Additional Information
-              </h3>
-
-              <div className="mb-3 p-2 bg-light rounded">
-                <strong>Type: </strong>
-                <span>{spot.type}</span>
-              </div>
-
-              <div className="mb-3 p-2 bg-light rounded">
-                <strong>Zip Code: </strong>
-                <span>{spot.zipCode}</span>
-              </div>
-
-              {spot.amenities && Array.isArray(spot.amenities) && (
-                <div className="mt-4">
-                  <strong className="d-block mb-2">Available Amenities:</strong>
-                  <div className="bg-light p-3 rounded">
-                    {spot.amenities.map((amenity: string) => (
-                      <div
-                        key={`amenity-${amenity}`}
-                        className="d-flex align-items-center mb-2"
-                      >
-                        <div className="me-2 text-secondary-green">•</div>
-                        <span>{amenity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </Col>
       </Row>

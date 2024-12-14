@@ -12,8 +12,11 @@ import {
   Cup,
   People,
   GeoAlt,
+  HeartFill,
+  Heart,
 } from 'react-bootstrap-icons';
 import type { Spot } from '@prisma/client';
+import { useState } from 'react';
 
 interface SpotCardProps {
   spot: Spot & {
@@ -21,12 +24,37 @@ interface SpotCardProps {
       reviews: number;
     };
   };
+  userId: string; // track current user
 }
 
 const SpotCard = ({ spot }: SpotCardProps) => {
   const router = useRouter();
   const fullStars = Math.floor(spot.rating);
   const halfStars = spot.rating - fullStars >= 0.5 ? 1 : 0;
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // keep card click from triggering
+
+    const endpoint = isFavorited ? '/api/favorites/remove' : '/api/favorites/add';
+    const method = isFavorited ? 'DELETE' : 'POST';
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, spotId: spot.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle favorite');
+      }
+
+      setIsFavorited(!isFavorited);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   const handleClick = () => {
     router.push(`/spots/${spot.id}`);
@@ -83,6 +111,22 @@ const SpotCard = ({ spot }: SpotCardProps) => {
           >
             {spot.type}
           </Badge>
+          <button
+            type="button"
+            className="btn btn-outline-danger btn-sm"
+            onClick={toggleFavorite}
+            aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
+            style={{
+              border: 'none',
+              background: 'transparent',
+            }}
+          >
+            {isFavorited ? (
+              <HeartFill color="red" size={20} />
+            ) : (
+              <Heart size={20} />
+            )}
+          </button>
         </div>
 
         {/* Rating */}
