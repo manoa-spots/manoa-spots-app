@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/require-default-props */
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -16,7 +19,7 @@ import {
   Heart,
 } from 'react-bootstrap-icons';
 import type { Spot } from '@prisma/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SpotCardProps {
   spot: Spot & {
@@ -24,18 +27,28 @@ interface SpotCardProps {
       reviews: number;
     };
   };
-  userId: string; // track current user
+  userId: string;
+  isFavorite?: boolean;
 }
 
-const SpotCard = ({ spot }: SpotCardProps) => {
+const SpotCard = ({ spot, userId, isFavorite = false }: SpotCardProps) => {
   const router = useRouter();
   const fullStars = Math.floor(spot.rating);
   const halfStars = spot.rating - fullStars >= 0.5 ? 1 : 0;
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(isFavorite);
+
+  const checkIfFavorited = async () => {
+    try {
+      const response = await fetch(`/api/favorites?userId=${userId}`);
+      const favorites = await response.json();
+      setIsFavorited(favorites.some((fav: any) => fav.spotId === spot.id));
+    } catch (error) {
+      console.error('Error checking favorites:', error);
+    }
+  };
 
   const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // keep card click from triggering
-
+    e.stopPropagation();
     const endpoint = isFavorited ? '/api/favorites/remove' : '/api/favorites/add';
     const method = isFavorited ? 'DELETE' : 'POST';
 
@@ -46,19 +59,21 @@ const SpotCard = ({ spot }: SpotCardProps) => {
         body: JSON.stringify({ userId, spotId: spot.id }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to toggle favorite');
+      if (response.ok) {
+        setIsFavorited(!isFavorited);
+      } else {
+        console.error('Failed to toggle favorite');
       }
-
-      setIsFavorited(!isFavorited);
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
   };
 
-  const handleClick = () => {
-    router.push(`/spots/${spot.id}`);
-  };
+  useEffect(() => {
+    checkIfFavorited();
+  }, [userId]);
+
+  const handleClick = () => router.push(`/spots/${spot.id}`);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
