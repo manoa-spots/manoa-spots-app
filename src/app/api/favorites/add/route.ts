@@ -1,39 +1,55 @@
+/* eslint-disable import/no-named-as-default */
 /* eslint-disable import/prefer-default-export */
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/authOptions';
 import { NextResponse } from 'next/server';
-// eslint-disable-next-line import/no-named-as-default
 import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const { userId, spotId } = await req.json();
+    const session = await getServerSession(authOptions);
+    const { userId: bodyUserId, spotId } = await req.json();
+    const userId = bodyUserId || session?.user?.id; // Fallback to session userId
+
+    console.log('Add Favorite API:', { userId, spotId });
 
     if (!userId || !spotId) {
+      console.error('Missing data:', { userId, spotId });
       return NextResponse.json({ error: 'Missing userId or spotId' }, { status: 400 });
     }
 
-    // Check if user exists
-    const userExists = await prisma.user.findUnique({ where: { id: userId } });
-    if (!userExists) {
-      return NextResponse.json({ error: 'User does not exist' }, { status: 404 });
-    }
+    // Use Prisma transaction to ensure atomic operations
+    const transaction = await prisma.$transaction(async (tx) => {
+      // Validate user and spot existence
+      const user = await tx.user.findUnique({ where: { id: userId } });
+      const spot = await tx.spot.findUnique({ where: { id: spotId } });
 
-    // Check if spot exists
-    const spotExists = await prisma.spot.findUnique({ where: { id: spotId } });
-    if (!spotExists) {
-      return NextResponse.json({ error: 'Spot does not exist' }, { status: 404 });
-    }
+      if (!user || !spot) {
+        console.error('User or Spot not found:', { user, spot });
+        throw new Error('User or Spot does not exist');
+      }
 
-    // Create the favorite
-    const favorite = await prisma.favorite.create({
-      data: {
-        userId,
-        spotId,
-      },
+      // Create the favorite
+      const favorite = await tx.favorite.create({
+        data: { userId, spotId },
+      });
+
+      return favorite;
     });
 
-    return NextResponse.json(favorite);
+    console.log('Favorite created:', transaction);
+    return NextResponse.json(transaction);
   } catch (error) {
-    console.error('Error adding favorite:', error);
+    // Safely handle error of type 'unknown'
+    if (error instanceof Error) {
+      console.error('Error adding favorite:', error.message);
+      if (error.message === 'User or Spot does not exist') {
+        return NextResponse.json({ error: error.message }, { status: 404 });
+      }
+    } else {
+      console.error('Unexpected error:', error);
+    }
+
     return NextResponse.json({ error: 'Failed to add favorite' }, { status: 500 });
   }
 }

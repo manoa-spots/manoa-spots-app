@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/require-default-props */
 
@@ -29,23 +30,18 @@ interface SpotCardProps {
   };
   userId: string;
   isFavorite?: boolean;
+  onFavoriteToggle?: (spotId: string, isFavorited: boolean) => void;
 }
 
-const SpotCard = ({ spot, userId, isFavorite = false }: SpotCardProps) => {
+const SpotCard = ({ spot, userId, isFavorite = false, onFavoriteToggle }: SpotCardProps) => {
   const router = useRouter();
   const fullStars = Math.floor(spot.rating);
   const halfStars = spot.rating - fullStars >= 0.5 ? 1 : 0;
   const [isFavorited, setIsFavorited] = useState(isFavorite);
 
-  const checkIfFavorited = async () => {
-    try {
-      const response = await fetch(`/api/favorites?userId=${userId}`);
-      const favorites = await response.json();
-      setIsFavorited(favorites.some((fav: any) => fav.spotId === spot.id));
-    } catch (error) {
-      console.error('Error checking favorites:', error);
-    }
-  };
+  useEffect(() => {
+    setIsFavorited(isFavorite); // Sync internal state with parent when `isFavorite` changes
+  }, [isFavorite]);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -60,21 +56,20 @@ const SpotCard = ({ spot, userId, isFavorite = false }: SpotCardProps) => {
       });
 
       if (response.ok) {
-        setIsFavorited(!isFavorited);
+        const updatedFavoriteStatus = !isFavorited;
+        setIsFavorited(updatedFavoriteStatus);
+        if (onFavoriteToggle) {
+          onFavoriteToggle(spot.id, updatedFavoriteStatus);
+        }
       } else {
-        console.error('Failed to toggle favorite');
+        console.error('Failed to toggle favorite:');
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
     }
   };
 
-  useEffect(() => {
-    checkIfFavorited();
-  }, [userId]);
-
   const handleClick = () => router.push(`/spots/${spot.id}`);
-
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();

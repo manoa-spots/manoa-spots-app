@@ -5,7 +5,11 @@ import prisma from '@/lib/prisma';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const userId = url.searchParams.get('userId') || undefined;
+  const userId = url.searchParams.get('userId') ?? undefined;
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+  }
 
   try {
     const favorites = await prisma.favorite.findMany({
