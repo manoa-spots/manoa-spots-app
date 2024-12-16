@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Container } from 'react-bootstrap';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/authOptions';
@@ -26,7 +27,9 @@ export default async function FavoritesPage() {
           </h1>
         </Container>
       </div>
-      <FavoriteContent userId={currentUserId} />
+      <Suspense fallback={<p>Loading your favorite spots...</p>}>
+        <FavoriteContent userId={currentUserId} />
+      </Suspense>
     </main>
   );
 }
