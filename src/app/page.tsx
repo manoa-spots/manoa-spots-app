@@ -3,6 +3,8 @@ import { PageIDs } from '@/utilities/ids';
 import SpotCard from '@/components/SpotCard';
 import type { Spot } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next'; // Import session helper
+import { authOptions } from '@/lib/authOptions'; // Import authOptions for NextAuth
 
 async function getSpots(): Promise<(Spot & { _count: { reviews: number } })[]> {
   return prisma.spot.findMany({
@@ -17,6 +19,10 @@ async function getSpots(): Promise<(Spot & { _count: { reviews: number } })[]> {
 export default async function Home() {
   try {
     const spots = await getSpots();
+
+    // Get the current user session
+    const session = await getServerSession(authOptions);
+    const currentUserId = session?.user?.id || ''; // Safely extract userId
 
     return (
       <main>
@@ -44,7 +50,8 @@ export default async function Home() {
                 <Row xs={1} md={2} lg={3} className="g-4">
                   {spots.map((spot) => (
                     <Col key={spot.id}>
-                      <SpotCard spot={spot} />
+                      {/* Pass currentUserId as a prop to SpotCard */}
+                      <SpotCard spot={spot} userId={currentUserId} />
                     </Col>
                   ))}
                 </Row>
