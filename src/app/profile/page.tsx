@@ -57,7 +57,7 @@ const ProfilePage = () => {
   const [user, setUser] = useState<User>({
     id: '1',
     name: 'Jane Doe',
-    profilePic: '/images/profile.jpg',
+    profilePic: '/images/profilepic.jpg',
     interests: [
       { id: crypto.randomUUID(), value: 'Cafés' },
       { id: crypto.randomUUID(), value: 'Matcha' },

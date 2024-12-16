@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { Container, Row, Col } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
@@ -20,7 +20,6 @@ import {
 import type { Spot } from '@prisma/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import CheckInButton from '@/components/CheckInButton';
-import SpotBusynessIndicator from '@/components/BusyIndicator';
 
 type HoursType = {
   [key: string]: string;
@@ -36,35 +35,8 @@ type HoursType = {
 export default function SpotPage() {
   const params = useParams();
   const [spot, setSpot] = React.useState<Spot | null>(null);
-  const [busynessData, setBusynessData] = useState({
-    currentBusyness: 'unknown',
-    activeCheckIns: 0,
-  });
-  const currentUser = { id: 'exampleUserId' }; // Replace with actual user data from your auth system
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-
-  const fetchBusynessData = React.useCallback(async () => {
-    try {
-      const response = await fetch(`/api/spots/busyness?spotId=${params.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setBusynessData(data);
-      }
-    } catch (err) {
-      console.error('Error fetching busyness:', err);
-    }
-  }, [params.id]);
-
-  // Handle checkin completion
-  const handleCheckInComplete = React.useCallback(() => {
-    fetchBusynessData();
-  }, [fetchBusynessData]);
-
-  // Add this useEffect to fetch initial busyness data
-  useEffect(() => {
-    fetchBusynessData();
-  }, [fetchBusynessData]);
 
   React.useEffect(() => {
     const fetchSpot = async () => {
@@ -174,35 +146,15 @@ export default function SpotPage() {
             </div>
           </div>
 
-          {/* Check-in button */}
-          <div className="mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <CheckInButton
-                spotId={spot.id}
-                spotName={spot.name}
-                userId={currentUser.id}
-                onCheckInComplete={handleCheckInComplete}
-              />
-              <div className="ms-3">
-                <span className="text-muted">
-                  Current Activity:
-                  {busynessData.activeCheckIns}
-                  + people here
-                </span>
-              </div>
-            </div>
-            <div className="mt-2">
-              <SpotBusynessIndicator
-                spotId={spot.id}
-                onUpdate={fetchBusynessData}
-              />
-            </div>
-          </div>
-
           {/* Styled address */}
           <div className="d-flex align-items-center text-muted mb-3 bg-light rounded-pill px-3 py-2">
             <GeoAlt className="me-2" color="var(--secondary-green)" />
             {spot.address}
+          </div>
+
+          {/* Check-in button */}
+          <div className="mb-4">
+            <CheckInButton spotId={spot.id} />
           </div>
         </Col>
       </Row>
