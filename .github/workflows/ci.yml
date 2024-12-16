@@ -1,4 +1,4 @@
-name: ci-nextjs-application-template
+name: manoa-spots
 on:
   push:
     branches: [main, master]
