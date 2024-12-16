@@ -22,7 +22,6 @@ import {
 import type { Spot } from '@prisma/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import CheckInButton from '@/components/CheckInButton';
-import SpotBusynessIndicator from '@/components/BusyIndicator';
 
 type HoursType = {
   [key: string]: string;
@@ -37,79 +36,26 @@ type HoursType = {
 
 export default function SpotPage() {
   const params = useParams();
-  const [spot, setSpot] = useState<Spot | null>(null);
-  const [busynessData, setBusynessData] = useState({
-    currentBusyness: 'unknown',
-    activeCheckIns: 0,
-  });
-  const currentUser = { id: 'exampleUserId' }; // Replace with actual user data from your auth system
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [spot, setSpot] = React.useState<Spot | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const toggleFavorite = async () => {
-    const endpoint = isFavorited ? '/api/favorites/remove' : '/api/favorites/add';
-    const method = isFavorited ? 'DELETE' : 'POST';
-
-    try {
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: currentUser.id, spotId: spot?.id }),
-      });
-
-      const result = await response.json(); // Log the response
-      console.log('Toggle favorite API response:', result);
-
-      if (!response.ok) {
-        throw new Error('Failed to toggle favorite');
-      }
-
-      setIsFavorited((prev) => !prev); // Toggle state
-      console.log('isFavorited updated:', !isFavorited);
-    } catch (toggleError) {
-      console.error('Error toggling favorite:', toggleError);
-    }
-  };
-
-  const fetchBusynessData = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/spots/busyness?spotId=${params.id}`);
-      if (response.ok) {
+  React.useEffect(() => {
+    const fetchSpot = async () => {
+      try {
+        const response = await fetch(`/api/spots/${params.id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch spot details');
+        }
         const data = await response.json();
-        setBusynessData(data);
+        setSpot(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching busyness:', err);
-    }
-  }, [params.id]);
+    };
 
-  const fetchSpot = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/spots/${params.id}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch spot details');
-      }
-      const data = await response.json();
-      setSpot(data);
-
-      const favoriteResponse = await fetch(`/api/favorites?userId=${currentUser.id}`);
-      if (favoriteResponse.ok) {
-        const favorites = await favoriteResponse.json();
-        setIsFavorited(favorites.some((fav: any) => fav.spotId === data.id));
-      }
-    } catch (fetchError) {
-      setError(fetchError instanceof Error ? fetchError.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  }, [params.id, currentUser.id]);
-
-  useEffect(() => {
-    fetchBusynessData();
-  }, [fetchBusynessData]);
-
-  useEffect(() => {
     if (params.id) {
       fetchSpot();
     }
@@ -205,31 +151,15 @@ export default function SpotPage() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <CheckInButton
-                spotId={spot.id}
-                spotName={spot.name}
-                userId={currentUser.id}
-                onCheckInComplete={fetchBusynessData}
-              />
-              <div className="ms-3">
-                <span className="text-muted">
-                  Current Activity:
-                  {' '}
-                  {busynessData.activeCheckIns}
-                  + people here
-                </span>
-              </div>
-            </div>
-            <div className="mt-2">
-              <SpotBusynessIndicator spotId={spot.id} onUpdate={fetchBusynessData} />
-            </div>
-          </div>
-
+          {/* Styled address */}
           <div className="d-flex align-items-center text-muted mb-3 bg-light rounded-pill px-3 py-2">
             <GeoAlt className="me-2" color="var(--secondary-green)" />
             {spot.address}
+          </div>
+
+          {/* Check-in button */}
+          <div className="mb-4">
+            <CheckInButton spotId={spot.id} />
           </div>
         </Col>
       </Row>
