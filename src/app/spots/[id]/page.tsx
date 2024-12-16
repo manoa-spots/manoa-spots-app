@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { Container, Row, Col } from 'react-bootstrap';
 import Image from 'react-bootstrap/Image';
@@ -39,6 +39,14 @@ export default function SpotPage() {
   const [spot, setSpot] = React.useState<Spot | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = React.useState(false);
+
+  const toggleFavorite = () => {
+    setIsFavorited((prev) => !prev);
+    // Optional: Save favorite state to a backend or localStorage
+    // Example:
+    // await fetch(`/api/favorites/${spot.id}`, { method: isFavorited ? 'DELETE' : 'POST' });
+  };
 
   React.useEffect(() => {
     const fetchSpot = async () => {
@@ -59,7 +67,7 @@ export default function SpotPage() {
     if (params.id) {
       fetchSpot();
     }
-  }, [params.id, fetchSpot]);
+  }, [params.id]);
 
   if (loading) {
     return (
